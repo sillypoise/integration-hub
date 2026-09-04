@@ -1,0 +1,59 @@
+name: CI
+
+on:
+    push:
+        branches: [main]
+    pull_request:
+
+permissions:
+    contents: read
+
+jobs:
+    validate:
+        runs-on: ubuntu-24.04
+        timeout-minutes: 20
+        services:
+            postgres:
+                image: postgres:17.11-alpine3.23
+                env:
+                    POSTGRES_DB: integration_hub
+                    POSTGRES_PASSWORD: integration_hub
+                    POSTGRES_USER: integration_hub
+                ports:
+                    - 5432:5432
+                options: >-
+                    --health-cmd "pg_isready -U integration_hub -d integration_hub"
+                    --health-interval 2s --health-timeout 3s --health-retries 15
+        env:
+            CI: "true"
+            DATABASE_URL: postgresql://integration_hub:integration_hub@127.0.0.1:5432/integration_hub
+            NEXT_TELEMETRY_DISABLED: "1"
+        steps:
+            - name: Check out repository
+              uses: actions/checkout@v4
+            - name: Configure Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version-file: .nvmrc
+            - name: Enable pnpm
+              run: corepack enable pnpm
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+            - name: Check formatting
+              run: pnpm format:check
+            - name: Lint
+              run: pnpm lint
+            - name: Typecheck
+              run: pnpm typecheck
+            - name: Run unit tests
+              env:
+                  NODE_ENV: test
+              run: pnpm test:coverage
+            - name: Apply database migrations
+              run: pnpm db:migrate
+            - name: Build
+              run: pnpm build
+            - name: Install Chromium
+              run: pnpm exec playwright install --with-deps chromium
+            - name: Run browser smoke tests
+              run: pnpm test:e2e

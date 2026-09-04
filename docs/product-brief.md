@@ -17,8 +17,8 @@ needed to understand and recover failed records. It is not a workflow builder, i
 marketplace, enterprise multi-tenant platform, or high-scale event-processing benchmark.
 
 The public demo uses a clearly labeled commerce simulator so every visitor can exercise the flow
-without shared credentials or external side effects. A maintainer-only test environment will use
-one real third-party sandbox before the project claims real integration capability.
+without shared credentials or external side effects. A maintainer-only test environment will use one
+real third-party sandbox before the project claims real integration capability.
 
 ## 1. Client problem
 
@@ -50,9 +50,8 @@ recovery.
 7. The retry either succeeds or returns to a visible failure state with a stable error class.
 
 The private test environment follows the same internal path but replaces the simulator adapter with
-Stripe test mode as the commerce source and a HubSpot developer test account as the CRM
-destination. This decision and its validation conditions are recorded in
-[`tech-stack.md`](tech-stack.md).
+Stripe test mode as the commerce source and a HubSpot developer test account as the CRM destination.
+This decision and its validation conditions are recorded in [`tech-stack.md`](tech-stack.md).
 
 ## 3. Failure and recovery behavior
 

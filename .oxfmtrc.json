@@ -1,0 +1,17 @@
+{
+    "$schema": "./node_modules/oxfmt/configuration_schema.json",
+    "ignorePatterns": [
+        ".next/**",
+        ".pi/**",
+        "coverage/**",
+        "drizzle/meta/**",
+        "node_modules/**",
+        "playwright-report/**",
+        "pnpm-lock.yaml",
+        "test-results/**"
+    ],
+    "printWidth": 100,
+    "proseWrap": "always",
+    "tabWidth": 4,
+    "useTabs": false
+}

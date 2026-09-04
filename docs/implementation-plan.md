@@ -11,6 +11,9 @@
 
 ## Stage 1: Application foundation
 
+**Status:** Complete. Verified from a clean temporary working directory using the pinned Node.js
+version and a Podman-hosted PostgreSQL database.
+
 ### Outcome
 
 A strict, locally runnable Next.js application with PostgreSQL, quality checks, and no product
@@ -20,8 +23,8 @@ behavior yet.
 
 - Scaffold Next.js App Router with Node.js 22, pnpm, strict TypeScript, and Tailwind CSS.
 - Pin dependencies and commit the lockfile.
-- Configure ESLint, Prettier, Vitest, Playwright, and warnings-as-failures checks.
-- Add Docker Compose for local PostgreSQL 17 with an explicit health check.
+- Configure Oxlint, Oxfmt, Vitest, Playwright, and warnings-as-failures checks.
+- Document a bounded Podman command for local PostgreSQL 17 with an explicit health check.
 - Add typed startup configuration that fails on missing or invalid required values.
 - Add Drizzle configuration and an empty initial migration workflow.
 - Add a minimal application shell and `/health/live` endpoint.
@@ -41,7 +44,7 @@ The highest-risk topology assumption is verified before feature implementation.
 
 ### Work
 
-- Add a multi-stage Dockerfile and Railway configuration.
+- Add a multi-stage Containerfile and Railway configuration.
 - Provision one Railway application service and one managed PostgreSQL service.
 - Start pg-boss with one temporary diagnostic job handler.
 - Add `/health/ready` with bounded configuration and database checks.
@@ -262,8 +265,8 @@ foundation
 
 A later stage may add a failing test earlier, but it must not introduce its product surface before
 its prerequisites pass. Deployment verification is early because a failed worker topology would
-change implementation choices; visual polish follows the working flow so screens reflect real
-states rather than mock state.
+change implementation choices; visual polish follows the working flow so screens reflect real states
+rather than mock state.
 
 ## Completion boundary
 

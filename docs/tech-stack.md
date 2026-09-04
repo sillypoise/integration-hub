@@ -59,9 +59,11 @@ system, field-mapping language, or dynamic code-loading mechanism.
 
 ## Testing and quality
 
-- Static: TypeScript, ESLint, and Prettier with warnings treated as failures.
+- Static: TypeScript, Oxlint, and Oxfmt with warnings treated as failures. TypeScript checks
+  application code strictly while `skipLibCheck` isolates incompatible Next.js and Vitest
+  declarations. Re-test that exception whenever either dependency is upgraded.
 - Unit: Vitest for validation, mapping, idempotency, and retry classification.
-- Database integration: Vitest against PostgreSQL in Docker for persistence behavior.
+- Database integration: Vitest against PostgreSQL in Podman for persistence behavior.
 - Browser: Playwright for the primary flow, responsive boundaries, denial, and recovery.
 - Real adapter: An opt-in Vitest test with maintainer secrets for the sandbox flow.
 
@@ -101,16 +103,14 @@ Railway logs and database-visible job state are sufficient for the initial publi
 
 ## Deployment
 
-| Concern | Choice |
-| --- | --- |
-| Source control and CI | GitHub and GitHub Actions |
-| Application host | Railway |
-| Database host | Railway managed PostgreSQL |
-| Build artifact | Multi-stage Docker image |
-| Deployment shape | One Node application service and one PostgreSQL service |
-| Environments | Local, CI, and public demo; private sandbox tests run on demand |
-| Schema changes | Forward-only Drizzle migrations run as an explicit release step |
-| TLS | Railway-managed public HTTPS; encrypted provider network connection to PostgreSQL |
+- Source control and CI: GitHub and GitHub Actions.
+- Application host: Railway.
+- Database host: Railway managed PostgreSQL.
+- Build artifact: Multi-stage OCI image built from a Containerfile with Podman.
+- Deployment shape: One Node application service and one PostgreSQL service.
+- Environments: Local, CI, and public demo; private sandbox tests run on demand.
+- Schema changes: Forward-only Drizzle migrations run as an explicit release step.
+- TLS: Railway-managed HTTPS and an encrypted provider network connection to PostgreSQL.
 
 The first deployment spike must verify persistent worker startup, graceful shutdown, migration
 execution, TLS database configuration, readiness behavior, restart recovery, and current monthly

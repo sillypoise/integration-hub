@@ -1,0 +1,44 @@
+{
+    "$schema": "./node_modules/oxlint/configuration_schema.json",
+    "plugins": [
+        "typescript",
+        "unicorn",
+        "oxc",
+        "import",
+        "react",
+        "jsx-a11y",
+        "nextjs",
+        "vitest",
+        "promise",
+        "node"
+    ],
+    "categories": {
+        "correctness": "error",
+        "suspicious": "error",
+        "perf": "error"
+    },
+    "env": {
+        "builtin": true,
+        "browser": true,
+        "node": true
+    },
+    "rules": {
+        "eqeqeq": "error",
+        "import/no-unassigned-import": [
+            "error",
+            {
+                "allow": ["**/*.css"]
+            }
+        ],
+        "max-lines-per-function": [
+            "error",
+            {
+                "max": 70,
+                "skipBlankLines": true,
+                "skipComments": true
+            }
+        ],
+        "no-console": "error",
+        "react/react-in-jsx-scope": "off"
+    }
+}

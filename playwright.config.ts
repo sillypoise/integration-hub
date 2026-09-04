@@ -1,0 +1,40 @@
+import { defineConfig, devices } from "@playwright/test";
+
+const port = 3100;
+const base_url = `http://127.0.0.1:${port}`;
+
+export default defineConfig({
+    testDir: "./tests/browser",
+    fullyParallel: false,
+    forbidOnly: Boolean(process.env.CI),
+    retries: process.env.CI ? 2 : 0,
+    workers: 1,
+    reporter: [["list"]],
+    timeout: 15_000,
+    expect: {
+        timeout: 5_000,
+    },
+    use: {
+        baseURL: base_url,
+        trace: "retain-on-failure",
+        screenshot: "only-on-failure",
+        video: "off",
+    },
+    projects: [
+        {
+            name: "chromium-desktop",
+            use: { ...devices["Desktop Chrome"] },
+        },
+    ],
+    webServer: {
+        command: `pnpm next start --hostname 127.0.0.1 --port ${port}`,
+        env: {
+            DATABASE_URL:
+                "postgresql://integration_hub:integration_hub@127.0.0.1:5432/integration_hub",
+            NODE_ENV: "production",
+        },
+        reuseExistingServer: false,
+        timeout: 60_000,
+        url: base_url,
+    },
+});

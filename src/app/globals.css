@@ -1,0 +1,82 @@
+@import "tailwindcss";
+
+:root {
+    color-scheme: dark;
+    --background: #071018;
+    --foreground: #edf7f5;
+    --muted: #9eb8b4;
+    --accent: #54e0bd;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    min-width: 20rem;
+    background: var(--background);
+}
+
+body {
+    min-height: 100vh;
+    margin: 0;
+    color: var(--foreground);
+    background:
+        radial-gradient(circle at 80% 10%, rgb(26 105 92 / 35%), transparent 30rem),
+        linear-gradient(145deg, #071018 20%, #0b1b22 100%);
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.shell {
+    display: grid;
+    min-height: 100vh;
+    max-width: 72rem;
+    align-content: center;
+    padding: clamp(2rem, 8vw, 7rem);
+}
+
+.eyebrow {
+    margin-bottom: 1.5rem;
+    color: var(--accent);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+h1 {
+    max-width: 12ch;
+    margin: 0;
+    font-size: clamp(3rem, 11vw, 7.5rem);
+    line-height: 0.9;
+    letter-spacing: -0.07em;
+}
+
+p {
+    max-width: 36rem;
+    margin: 2rem 0;
+    color: var(--muted);
+    font-size: clamp(1rem, 2.5vw, 1.3rem);
+    line-height: 1.65;
+}
+
+.status {
+    display: flex;
+    align-items: center;
+    width: fit-content;
+    gap: 0.65rem;
+    border: 1px solid rgb(84 224 189 / 25%);
+    border-radius: 999px;
+    padding: 0.55rem 0.85rem;
+    color: #c9eee5;
+    background: rgb(84 224 189 / 8%);
+    font-size: 0.8rem;
+}
+
+.status span {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0.8rem var(--accent);
+}
