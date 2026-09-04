@@ -34,6 +34,27 @@ dev:
 build:
     pnpm build
 
+# Build the production OCI image with Podman.
+container-build:
+    podman build --pull=missing --file Containerfile --tag integration-hub:local .
+
+# Run the production image against local PostgreSQL.
+container-start:
+    database_url='postgresql://integration_hub:integration_hub@'\
+        'host.containers.internal:5432/integration_hub'; \
+    podman run --detach --replace --name integration-hub-application \
+        --env DATABASE_SSL=disable \
+        --env DATABASE_URL="$database_url" \
+        --env LOG_LEVEL=info \
+        --env PORT=3000 \
+        --env SERVER_HOST=0.0.0.0 \
+        --publish 127.0.0.1:3000:3000 \
+        integration-hub:local >/dev/null
+
+# Stop the local production application container.
+container-stop:
+    podman stop --time 15 integration-hub-application >/dev/null
+
 # Format supported project files.
 format:
     pnpm format
@@ -78,9 +99,13 @@ test-browser: build
 database-generate:
     pnpm db:generate
 
-# Apply pending Drizzle migrations.
+# Apply pending Drizzle migrations with the development CLI.
 database-migrate:
     pnpm db:migrate
+
+# Apply migrations through the production release entry point.
+database-migrate-release:
+    NODE_ENV=production pnpm db:migrate:release
 
 # Start local PostgreSQL in Podman and wait at most 45 seconds for health.
 database-start:
@@ -110,7 +135,7 @@ database-status:
     podman ps --all --filter name={{postgres_container}}
 
 # Run all checks required before a commit or CI completion.
-validate: format-check lint typecheck test-coverage database-migrate test-browser
+validate: format-check lint typecheck test-coverage database-migrate-release test-browser
 
 # Install the browser and run the complete GitHub Actions validation entry point.
 ci: browser-install-ci validate

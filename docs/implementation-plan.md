@@ -40,6 +40,10 @@ behavior yet.
 
 ## Stage 2: Deployment and worker lifecycle spike
 
+**Status:** In progress. Local worker lifecycle is implemented; Railway authentication blocks the
+hosted exit gates. See
+[`stage-02-deployment-worker.md`](stage-reports/stage-02-deployment-worker.md).
+
 ### Outcome
 
 The highest-risk topology assumption is verified before feature implementation.
@@ -74,7 +78,7 @@ The system has explicit state transitions and an isolated public-demo security b
 - Define contracts for simulated source input, mapped customer output, job payloads, and safe
   errors.
 - Define bounded states for source events, synchronization runs, and attempts.
-- Add tables for demo workspaces, source events, runs, attempts, and audit events.
+- Add `p1_`-prefixed tables and columns for workspaces, source events, runs, attempts, and audits.
 - Add foreign keys, unique idempotency constraints, checks, indexes, and expiration timestamps.
 - Issue opaque workspace tokens in secure, HTTP-only, same-site cookies and store only token hashes.
 - Scope every query and mutation by the authenticated workspace.

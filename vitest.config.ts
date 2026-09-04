@@ -12,7 +12,18 @@ export default defineConfig({
             provider: "v8",
             reporter: ["text", "json", "html"],
             include: ["src/**/*.ts"],
-            exclude: ["src/**/*.test.ts", "src/app/**", "src/db/schema.ts"],
+            // Runtime wiring is verified by PostgreSQL and browser integration tests.
+            exclude: [
+                "src/**/*.test.ts",
+                "src/app/**",
+                "src/db/schema.ts",
+                "src/lib/database/**",
+                "src/lib/jobs/job_runtime.ts",
+                "src/lib/observability/**",
+                "src/scripts/**",
+                "src/server.ts",
+                "src/server/**",
+            ],
             thresholds: {
                 branches: 90,
                 functions: 90,

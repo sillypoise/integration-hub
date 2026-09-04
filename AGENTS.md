@@ -75,7 +75,7 @@ only documenting it here.
 - Compatibility expectations: Stable HTTP errors and persisted state transitions require explicit
   contract review before changes.
 - Migration / rollout constraints: Use forward-only Drizzle migrations run as an explicit release
-  step; never edit an applied migration.
+  step; never edit an applied migration. Prefix every project-owned table and column with `p1_`.
 - Performance constraints: Keep all queue, retry, batch, payload, and retention work bounded.
 - Security / privacy constraints: Public actions affect only isolated synthetic workspaces. Secrets,
   raw customer payloads, and real adapter authority must not reach clients or telemetry.

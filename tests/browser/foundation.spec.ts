@@ -9,11 +9,15 @@ test.describe("application foundation", () => {
         await expect(page).toHaveTitle(/Integration Hub/);
     });
 
-    test("exposes a non-cacheable liveness response", async ({ request }) => {
-        const response = await request.get("/health/live");
+    test("exposes non-cacheable health responses", async ({ request }) => {
+        const liveness_response = await request.get("/health/live");
+        const readiness_response = await request.get("/health/ready");
 
-        expect(response.status()).toBe(200);
-        expect(response.headers()["cache-control"]).toBe("no-store");
-        await expect(response.json()).resolves.toEqual({ status: "ok" });
+        expect(liveness_response.status()).toBe(200);
+        expect(liveness_response.headers()["cache-control"]).toBe("no-store");
+        await expect(liveness_response.json()).resolves.toEqual({ status: "ok" });
+        expect(readiness_response.status()).toBe(200);
+        expect(readiness_response.headers()["cache-control"]).toBe("no-store");
+        await expect(readiness_response.json()).resolves.toEqual({ status: "ready" });
     });
 });
