@@ -37,6 +37,16 @@ Run `just` to list supported commands. Run the complete local validation with:
 just validate
 ```
 
+### Linux watcher capacity
+
+`just dev` checks that Linux has enough free inotify instances before starting Next.js. If it
+reports low capacity, close idle editor and development-server processes first. To raise the current
+machine's temporary per-user limit when those processes are intentional, run:
+
+```bash
+sudo sysctl -w fs.inotify.max_user_instances=1024
+```
+
 ## Portfolio positioning
 
 This is an **Independent Project** and **Product Concept**, not client work or a production-proven

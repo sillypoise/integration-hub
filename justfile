@@ -26,8 +26,26 @@ environment:
 # Prepare dependencies, local configuration, PostgreSQL, and migrations.
 bootstrap: install environment database-start database-migrate
 
-# Start the development server.
-dev:
+# Refuse to start another watcher when Linux cannot provide enough inotify instances.
+_dev-inotify-check:
+    @if test -r /proc/sys/fs/inotify/max_user_instances; then \
+        used_instances=$( \
+            { find /proc/[0-9]*/fd -lname 'anon_inode:inotify' 2>/dev/null || true; } \
+            | wc -l \
+        ); \
+        maximum_instances=$(cat /proc/sys/fs/inotify/max_user_instances); \
+        available_instances=$((maximum_instances - used_instances)); \
+        if ((available_instances < 8)); then \
+            printf '%s\n' \
+                "Development watcher capacity is too low ($used_instances/$maximum_instances in use)." \
+                'Close idle development processes or increase fs.inotify.max_user_instances.' \
+                'The development server was not started.' >&2; \
+            exit 1; \
+        fi; \
+    fi
+
+# Start the development server after checking Linux watcher capacity.
+dev: _dev-inotify-check
     pnpm dev
 
 # Create the production application build.
