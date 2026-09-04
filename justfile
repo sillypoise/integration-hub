@@ -43,12 +43,25 @@ container-start:
     database_url='postgresql://integration_hub:integration_hub@'\
         'host.containers.internal:5432/integration_hub'; \
     podman run --detach --replace --name integration-hub-application \
+        --health-cmd "node -e \"fetch('http://127.0.0.1:3000/health/live')\
+            .then(response => process.exit(response.ok ? 0 : 1))\"" \
+        --health-interval 2s \
+        --health-timeout 3s \
+        --health-retries 15 \
+        --health-start-period 5s \
         --env DATABASE_SSL=disable \
         --env DATABASE_URL="$database_url" \
         --env PORT=3000 \
         --env SERVER_HOST=0.0.0.0 \
         --publish 127.0.0.1:3000:3000 \
         integration-hub:local >/dev/null
+
+# Build, run, and verify the production container with bounded cleanup.
+container-smoke: container-build container-start
+    @trap 'podman stop --time 15 integration-hub-application >/dev/null || true' EXIT; \
+    timeout 45s podman wait --condition healthy integration-hub-application >/dev/null; \
+    test "$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' \
+        http://127.0.0.1:3000/health/ready)" = "200"
 
 # Stop the local production application container.
 container-stop:
@@ -136,8 +149,8 @@ database-status:
 # Run all checks required before a commit or CI completion.
 validate: format-check lint typecheck test-coverage database-migrate-release test-browser
 
-# Install the browser, validate the app, and build its production image in CI.
-ci: browser-install-ci validate container-build
+# Install the browser, validate the app, and smoke-test its production image in CI.
+ci: browser-install-ci validate container-smoke
 
 # Print the active project tool versions.
 runtime:
