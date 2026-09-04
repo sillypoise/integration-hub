@@ -8,6 +8,20 @@
       "when": 1788553900283,
       "tag": "0000_initialize",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1788562034276,
+      "tag": "0001_create_domain_schema",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788562676130,
+      "tag": "0002_enforce_source_event_immutability",
+      "breakpoints": true
     }
   ]
 }

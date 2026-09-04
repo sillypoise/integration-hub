@@ -4,8 +4,13 @@ import { z } from "zod";
 
 import { read_server_environment } from "../config/server_environment.ts";
 import { application_logger } from "../observability/application_logger.ts";
+import {
+    cleanup_expired_p1_demo_workspaces,
+    p1_workspace_cleanup_batch_limit,
+} from "../workspaces/workspace_repository.ts";
 
 const diagnostic_queue_name = "p1_diagnostic";
+const workspace_cleanup_queue_name = "p1_workspace_cleanup";
 const diagnostic_payload_schema = z.object({
     p1_delay_ms: z.number().int().min(0).max(5_000),
     p1_probe_id: z.uuid(),
@@ -31,7 +36,7 @@ export async function start_job_runtime(): Promise<void> {
         persistQueueStats: false,
         persistWarnings: false,
         reindex: false,
-        schedule: false,
+        schedule: true,
         schema: "p1_job",
         ssl: database_ssl,
         supervise: true,
@@ -49,33 +54,12 @@ export async function start_job_runtime(): Promise<void> {
     const schema_drift = await next_job_boss.detectSchemaDrift();
     assert.equal(schema_drift.ok, true);
 
-    await next_job_boss.createQueue(diagnostic_queue_name, {
-        deleteAfterSeconds: 3_600,
-        expireInSeconds: 10,
-        notify: false,
-        partition: false,
-        policy: "standard",
-        retentionSeconds: 3_600,
-        retryBackoff: false,
-        retryDelay: 1,
-        retryLimit: 1,
-        warningQueueSize: 100,
-    });
-    await next_job_boss.work(
-        diagnostic_queue_name,
-        {
-            batchSize: 1,
-            burstWhenBatchFull: false,
-            includeMetadata: false,
-            localConcurrency: 1,
-            pollingIntervalSeconds: 0.5,
-        },
-        job_runtime_handle_diagnostic_jobs,
-    );
+    await start_job_runtime_register_diagnostic_queue(next_job_boss);
+    await start_job_runtime_register_workspace_cleanup_queue(next_job_boss);
 
     job_boss = next_job_boss;
     assert.ok(job_boss instanceof PgBoss);
-    assert.equal(job_boss.getWipData().length, 1);
+    assert.equal(job_boss.getWipData().length, 2);
 }
 
 export async function stop_job_runtime(): Promise<void> {
@@ -86,7 +70,7 @@ export async function stop_job_runtime(): Promise<void> {
     }
 
     assert.ok(active_job_boss instanceof PgBoss);
-    assert.ok(active_job_boss.getWipData().length <= 1);
+    assert.ok(active_job_boss.getWipData().length <= 2);
 
     job_boss = null;
     await active_job_boss.stop({ close: true, graceful: true, timeout: 10_000 });
@@ -133,6 +117,98 @@ export async function find_diagnostic_job(job_id: string) {
     assert.ok(jobs.length <= 1);
 
     return jobs[0] ?? null;
+}
+
+async function start_job_runtime_register_diagnostic_queue(job_boss_to_register: PgBoss) {
+    assert.ok(job_boss_to_register instanceof PgBoss);
+    assert.ok(diagnostic_queue_name.startsWith("p1_"));
+
+    await job_boss_to_register.createQueue(diagnostic_queue_name, {
+        deleteAfterSeconds: 3_600,
+        expireInSeconds: 10,
+        notify: false,
+        partition: false,
+        policy: "standard",
+        retentionSeconds: 3_600,
+        retryBackoff: false,
+        retryDelay: 1,
+        retryLimit: 1,
+        warningQueueSize: 100,
+    });
+    await job_boss_to_register.work(
+        diagnostic_queue_name,
+        {
+            batchSize: 1,
+            burstWhenBatchFull: false,
+            includeMetadata: false,
+            localConcurrency: 1,
+            pollingIntervalSeconds: 0.5,
+        },
+        job_runtime_handle_diagnostic_jobs,
+    );
+}
+
+async function start_job_runtime_register_workspace_cleanup_queue(job_boss_to_register: PgBoss) {
+    assert.ok(job_boss_to_register instanceof PgBoss);
+    assert.ok(workspace_cleanup_queue_name.startsWith("p1_"));
+
+    await job_boss_to_register.createQueue(workspace_cleanup_queue_name, {
+        deleteAfterSeconds: 3_600,
+        expireInSeconds: 30,
+        notify: false,
+        partition: false,
+        policy: "singleton",
+        retentionSeconds: 3_600,
+        retryBackoff: false,
+        retryDelay: 60,
+        retryLimit: 2,
+        warningQueueSize: 10,
+    });
+    await job_boss_to_register.schedule(
+        workspace_cleanup_queue_name,
+        "0 * * * *",
+        {},
+        {
+            deleteAfterSeconds: 3_600,
+            expireInSeconds: 30,
+            key: "p1_hourly_workspace_cleanup",
+            retentionSeconds: 3_600,
+            retryBackoff: false,
+            retryDelay: 60,
+            retryLimit: 2,
+            singletonKey: "p1_hourly_workspace_cleanup",
+            tz: "Etc/UTC",
+        },
+    );
+    await job_boss_to_register.work(
+        workspace_cleanup_queue_name,
+        {
+            batchSize: 1,
+            burstWhenBatchFull: false,
+            includeMetadata: false,
+            localConcurrency: 1,
+            pollingIntervalSeconds: 30,
+        },
+        job_runtime_handle_workspace_cleanup_jobs,
+    );
+}
+
+async function job_runtime_handle_workspace_cleanup_jobs(
+    jobs: ReadonlyArray<{ data: unknown; id: string }>,
+): Promise<{ p1_deleted_count: number }> {
+    assert.equal(jobs.length, 1);
+    assert.ok(jobs[0]?.id.length);
+
+    const deleted_count = await cleanup_expired_p1_demo_workspaces({
+        batch_limit: p1_workspace_cleanup_batch_limit,
+        current_time: new Date(),
+    });
+
+    assert.ok(deleted_count >= 0);
+    assert.ok(deleted_count <= p1_workspace_cleanup_batch_limit);
+
+    application_logger.info({ deleted_count }, "Expired workspace cleanup completed.");
+    return { p1_deleted_count: deleted_count };
 }
 
 async function job_runtime_handle_diagnostic_jobs(

@@ -25,6 +25,7 @@ jobs:
                     --health-cmd "pg_isready -U integration_hub -d integration_hub"
                     --health-interval 2s --health-timeout 3s --health-retries 15
         env:
+            APPLICATION_ORIGIN: http://127.0.0.1:3000
             CI: "true"
             DATABASE_SSL: disable
             DATABASE_URL: >-

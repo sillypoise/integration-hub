@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { read_server_environment } from "./server_environment";
 
 const valid_environment = Object.freeze({
+    APPLICATION_ORIGIN: "http://127.0.0.1:3000",
     DATABASE_SSL: "disable",
     DATABASE_URL: "postgresql://user:password@localhost:5432/integration_hub",
     NODE_ENV: "test",
@@ -18,6 +19,17 @@ describe("read_server_environment", () => {
         expect(environment.NODE_ENV).toBe("test");
         expect(environment.PORT).toBe(3_000);
         expect(Object.isFrozen(environment)).toBe(true);
+    });
+
+    it("rejects an application origin containing a path", () => {
+        const environment = {
+            ...valid_environment,
+            APPLICATION_ORIGIN: "https://example.test/not-an-origin",
+        };
+
+        expect(() => read_server_environment(environment)).toThrow(
+            "Invalid server environment configuration.",
+        );
     });
 
     it("rejects missing required configuration", () => {

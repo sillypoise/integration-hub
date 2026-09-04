@@ -68,6 +68,10 @@ The highest-risk topology assumption is verified before feature implementation.
 
 ## Stage 3: Contracts, schema, and workspace isolation
 
+**Status:** Complete. Contracts, prefixed schema, state transitions, workspace cookies, isolation,
+and bounded cleanup are implemented and tested. See
+[`stage-03-contracts-schema-isolation.md`](stage-reports/stage-03-contracts-schema-isolation.md).
+
 ### Outcome
 
 The system has explicit state transitions and an isolated public-demo security boundary.

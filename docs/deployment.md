@@ -15,6 +15,7 @@ query and returns a bounded `503 DEPENDENCY_UNAVAILABLE` response on failure.
 ## Required application variables
 
 ```text
+APPLICATION_ORIGIN=https://p1-integration-hub-production.up.railway.app
 DATABASE_SSL=disable
 DATABASE_URL=${{Postgres.DATABASE_URL}}
 NEXT_TELEMETRY_DISABLED=1

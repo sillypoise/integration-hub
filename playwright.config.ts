@@ -29,6 +29,7 @@ export default defineConfig({
     webServer: {
         command: `pnpm next start --hostname 127.0.0.1 --port ${port}`,
         env: {
+            APPLICATION_ORIGIN: base_url,
             DATABASE_SSL: "disable",
             DATABASE_URL:
                 "postgresql://integration_hub:integration_hub@127.0.0.1:5432/integration_hub",

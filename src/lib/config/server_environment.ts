@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { z } from "zod";
 
 const server_environment_schema = z.object({
+    APPLICATION_ORIGIN: z.url().refine((value) => new URL(value).origin === value),
     DATABASE_SSL: z.enum(["disable", "verify-full"]),
     DATABASE_URL: z.url().startsWith("postgresql://"),
     NODE_ENV: z.enum(["development", "test", "production"]),
@@ -20,6 +21,7 @@ export function read_server_environment(
     const parsed_environment = server_environment_schema.safeParse(input);
 
     if (parsed_environment.success) {
+        assert.ok(parsed_environment.data.APPLICATION_ORIGIN.length > 0);
         assert.ok(parsed_environment.data.DATABASE_URL.length > 0);
         assert.ok(parsed_environment.data.PORT >= 1_024);
 

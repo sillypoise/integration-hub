@@ -21,3 +21,21 @@ test.describe("application foundation", () => {
         await expect(readiness_response.json()).resolves.toEqual({ status: "ready" });
     });
 });
+
+test.describe("workspace boundary", () => {
+    // This browser-server check proves origin denial and opaque cookie-based authorization.
+    test("issues and authenticates an isolated demo workspace", async ({ request }) => {
+        const denied_response = await request.post("/api/demo/workspaces");
+        const creation_response = await request.post("/api/demo/workspaces", {
+            headers: { origin: "http://127.0.0.1:3100" },
+        });
+        const current_response = await request.get("/api/demo/workspaces");
+        const creation_body = await creation_response.text();
+
+        expect(denied_response.status()).toBe(403);
+        expect(creation_response.status()).toBe(201);
+        expect(creation_response.headers()["set-cookie"]).toContain("HttpOnly");
+        expect(creation_body).not.toContain("p1w_");
+        expect(current_response.status()).toBe(200);
+    });
+});

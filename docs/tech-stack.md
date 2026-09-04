@@ -30,7 +30,8 @@ current screen needs them.
 
 ## Data and background work
 
-- Database: PostgreSQL 17 as the durable source of truth, shared with sibling portfolio projects.
+- Database: PostgreSQL 17 or newer as the durable source of truth, shared with sibling portfolio
+  projects. Local and CI use PostgreSQL 17; Railway currently provides PostgreSQL 18.
 - Naming: Project-owned tables and columns use `p1_`; vendor internals use dedicated `p1_` schemas.
 - Database access: Drizzle ORM and `node-postgres` for typed schema, migrations, and SQL access.
 - Job queue: pg-boss on the application database for durable jobs without Redis.

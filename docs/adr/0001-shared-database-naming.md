@@ -11,9 +11,10 @@ visible project ownership without introducing one database service per demo.
 
 ## Decision
 
-Integration Hub-owned tables, columns, indexes, and constraints use the `p1_` prefix. Drizzle and
-pg-boss internals cannot safely rename every vendor-owned column, so those objects are isolated in
-schemas `p1_migrations` and `p1_job`.
+Integration Hub-owned tables, columns, and explicitly named indexes and constraints use the `p1_`
+prefix. PostgreSQL-generated `NOT NULL` constraint names are engine internals. Drizzle and pg-boss
+internals cannot safely rename every vendor-owned column, so those objects are isolated in schemas
+`p1_migrations` and `p1_job`.
 
 ## Consequences
 

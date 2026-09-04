@@ -67,6 +67,7 @@ container-start:
         --health-timeout 3s \
         --health-retries 15 \
         --health-start-period 5s \
+        --env APPLICATION_ORIGIN=http://127.0.0.1:3000 \
         --env DATABASE_SSL=disable \
         --env DATABASE_URL="$database_url" \
         --env PORT=3000 \
@@ -101,16 +102,16 @@ lint:
 typecheck:
     pnpm typecheck
 
-# Run unit tests without coverage enforcement.
-test:
+# Run unit and PostgreSQL integration tests after applying migrations.
+test: database-migrate-release
     pnpm test
 
-# Run one unit test file.
-test-one test_file:
+# Run one test file after applying migrations.
+test-one test_file: database-migrate-release
     pnpm vitest run --config vitest.config.ts {{ quote(test_file) }}
 
-# Run unit tests with configured coverage thresholds.
-test-coverage:
+# Run unit and PostgreSQL integration tests with configured coverage thresholds.
+test-coverage: database-migrate-release
     pnpm test:coverage
 
 # Install the pinned Playwright Chromium browser.
@@ -165,7 +166,7 @@ database-status:
     podman ps --all --filter name={{postgres_container}}
 
 # Run all checks required before a commit or CI completion.
-validate: format-check lint typecheck test-coverage database-migrate-release test-browser
+validate: format-check lint typecheck test-coverage test-browser
 
 # Install the browser, validate the app, and smoke-test its production image in CI.
 ci: browser-install-ci validate container-smoke
