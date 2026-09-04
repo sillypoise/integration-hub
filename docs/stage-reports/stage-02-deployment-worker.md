@@ -2,8 +2,8 @@
 
 ## Status
 
-In progress. Local implementation and lifecycle checks are underway. Railway deployment is blocked
-because the installed CLI reports `Unauthorized` for the available token.
+Complete. The same-process application and worker are deployed on Railway with shared PostgreSQL,
+and the local and hosted lifecycle exit gates passed.
 
 ## Delivered
 
@@ -16,7 +16,7 @@ because the installed CLI reports `Unauthorized` for the available token.
 - Added Podman image lifecycle commands and a reviewer-visible Railway cost estimate.
 - Recorded the `p1_` database naming contract and vendor-owned exceptions.
 
-## Verified so far
+## Verified
 
 - A queued diagnostic job survives worker shutdown and completes after restart.
 - Invalid diagnostic payload boundaries fail before enqueueing.
@@ -31,11 +31,21 @@ because the installed CLI reports `Unauthorized` for the available token.
   formatting, linting, typechecking, migrations, unit and browser tests, and the container smoke
   test.
 
+- Railway deployment `2fb54cab-9c55-499e-aa99-fe8ef0d43839` passed its pre-deploy migration and
+  `/health/ready` gate.
+- Public HTTPS liveness and readiness pass at
+  <https://p1-integration-hub-production.up.railway.app>.
+- Delayed job `55816ebe-4f19-4eb6-8b4e-f18a893e7a31` survived a Railway service redeploy, reached
+  `completed` with no retry, and produced exactly one completion log event.
+- Hosted PostgreSQL contains the prefixed `p1_migrations.p1_drizzle_migrations` table and pg-boss
+  tables only within `p1_job`.
+- A two-minute idle sample measured about 0.199 GB memory and 0.0052 vCPU combined. The projected
+  resource usage is about USD 2.24 per month and fits within the USD 5 Hobby charge.
+
 Local image pulling previously timed out during registry TLS negotiation. Hosted CI provided the
 reviewer-visible image build and runtime check instead.
 
-## Open exit gates
+## Follow-up
 
-- Authenticate Railway, deploy both services, and verify HTTPS health checks.
-- Terminate the Railway application during queued work and verify one completion after restart.
-- Record measured idle usage and projected monthly cost from Railway metrics.
+- Recheck measured Railway usage after seven days.
+- Replace and remove the temporary diagnostic queue when the Stage 4 synchronization worker lands.

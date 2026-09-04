@@ -40,9 +40,8 @@ behavior yet.
 
 ## Stage 2: Deployment and worker lifecycle spike
 
-**Status:** In progress. Local worker lifecycle is implemented; Railway authentication blocks the
-hosted exit gates. See
-[`stage-02-deployment-worker.md`](stage-reports/stage-02-deployment-worker.md).
+**Status:** Complete. Local and Railway lifecycle, recovery, health, migration, and cost checks
+passed. See [`stage-02-deployment-worker.md`](stage-reports/stage-02-deployment-worker.md).
 
 ### Outcome
 
@@ -57,7 +56,7 @@ The highest-risk topology assumption is verified before feature implementation.
 - Verify graceful shutdown stops job intake before database disconnection.
 - Verify a job survives process termination and completes once after restart.
 - Record measured idle cost and current provider pricing in deployment documentation.
-- Delete the diagnostic job after the lifecycle tests are captured as automated tests.
+- Keep the diagnostic job private and remove it when Stage 4 replaces it with synchronization work.
 
 ### Exit gate
 

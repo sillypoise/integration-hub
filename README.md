@@ -9,7 +9,7 @@ public demo without pretending to be a general-purpose integration platform.
 
 ## Status
 
-Stage 1 is complete and Stage 2 is in progress. The product boundary is documented in
+Stages 1 and 2 are complete; Stage 3 is next. The product boundary is documented in
 [`docs/product-brief.md`](docs/product-brief.md), the stack in
 [`docs/tech-stack.md`](docs/tech-stack.md), and the delivery sequence in
 [`docs/implementation-plan.md`](docs/implementation-plan.md). Completed work is summarized in

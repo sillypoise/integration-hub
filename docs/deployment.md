@@ -16,37 +16,45 @@ query and returns a bounded `503 DEPENDENCY_UNAVAILABLE` response on failure.
 
 ```text
 DATABASE_SSL=disable
-DATABASE_URL=${{portfolio-postgres.DATABASE_PRIVATE_URL}}
+DATABASE_URL=${{Postgres.DATABASE_URL}}
 NEXT_TELEMETRY_DISABLED=1
+NODE_ENV=production
+RAILWAY_DOCKERFILE_PATH=Containerfile
 SERVER_HOST=0.0.0.0
 ```
 
-Railway injects `PORT`. `DATABASE_SSL=disable` is restricted to Railway's private service network;
-an externally routed database URL must instead use `verify-full`.
+Railway injects `PORT`. The project token is environment-scoped, so `railway whoami` is not a valid
+authentication check; project-scoped commands such as `railway status`, `railway variables`, and
+`railway up` are the relevant checks. `RAILWAY_DOCKERFILE_PATH` is explicit because the initial CLI
+deployment otherwise selected Railpack instead of `Containerfile`.
+
+`DATABASE_SSL=disable` is restricted to Railway's private service network; an externally routed
+database URL must instead use `verify-full`.
 
 The public environment must not contain Stripe or HubSpot credentials. Real adapters remain outside
 the public deployment.
 
 ## Initial deployment commands
 
-Authenticate interactively and link this repository to the shared portfolio project:
+Use the environment-scoped project token and confirm this repository resolves the shared portfolio
+project:
 
 ```bash
-railway login
-railway link --project upwork-portfolio --environment production
-railway add --service p1-integration-hub --repo sillypoise/integration-hub
-railway up --service p1-integration-hub --detach
+RAILWAY_TOKEN=xxx railway status
 ```
 
-Provision one managed PostgreSQL service only if the portfolio project does not already have its
-canonical shared database:
+Provision the two services only if they do not already exist, configure the required variables, and
+deploy:
 
 ```bash
 railway add --database postgres
+railway add --service p1-integration-hub
+railway variables --service p1-integration-hub --set 'DATABASE_URL=${{Postgres.DATABASE_URL}}'
+railway up --service p1-integration-hub --detach
 ```
 
-Name that service `portfolio-postgres`; other portfolio applications reuse it with their own
-prefixes and vendor schemas.
+The `Postgres` service is the canonical shared non-production database. Other portfolio applications
+reuse it with their own prefixes and vendor schemas.
 
 Then configure the required variables, generate a public domain, and verify:
 
@@ -57,7 +65,8 @@ curl --fail --silent --show-error https://DEPLOYED_DOMAIN/health/ready
 
 ## Cost estimate
 
-Confidence: Medium. This estimate uses current list prices, not measured deployment usage.
+Confidence: Low for long-term usage and high that the planning ceiling is not currently at risk. The
+projection combines current list prices with a short post-deployment measurement window.
 
 Railway's pricing page, accessed 2026-09-04, lists:
 
@@ -69,14 +78,20 @@ Railway's pricing page, accessed 2026-09-04, lists:
 
 Source: <https://railway.com/pricing>.
 
-Estimated average usage is 0.125 GB application memory, 0.25 GB database memory, 0.02 combined vCPU,
-1 GB disk, and negligible egress. That is about USD 4.30 per month and fits the Hobby charge. At 0.5
-GB memory per service, the likely total is USD 11–15 per month depending on CPU. Actual usage must
-be recorded after seven days. Exceeding USD 25 in a month triggers a hosting review.
+The first two-minute idle sample averaged 0.088 GB memory and 0.0027 vCPU for the application and
+0.111 GB memory and 0.0025 vCPU for PostgreSQL. Projecting those values continuously gives about USD
+1.99 for memory and USD 0.10 for CPU per month. With 1 GB disk and negligible egress, estimated
+resource usage is about USD 2.24 and fits within the USD 5 Hobby charge.
 
-## Current blocker
+This short window is initial evidence, not a long-term measurement. Recheck after seven days.
+Exceeding USD 25 in a month triggers a hosting review.
 
-The local Railway CLI resolves the existing `upwork-portfolio` project metadata, but authenticated
-queries and service creation return `Unauthorized`. No Integration Hub service was created by this
-stage. Stage 2 cannot pass its deployment exit gate until authentication is restored and the restart
-checks run against Railway.
+## Deployment evidence
+
+Deployment `2fb54cab-9c55-499e-aa99-fe8ef0d43839` passed its database readiness health check at
+<https://p1-integration-hub-production.up.railway.app>. Its pre-deploy command created
+`p1_migrations.p1_drizzle_migrations`, and pg-boss created only vendor tables in `p1_job`.
+
+A delayed diagnostic job was queued before a service redeploy. The replacement process completed
+that job with `retry_count = 0`, and hosted logs contained exactly one completion event for its
+probe ID. This verifies durable recovery and one logical effect for the tested restart path.
