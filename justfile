@@ -137,8 +137,8 @@ database-status:
 # Run all checks required before a commit or CI completion.
 validate: format-check lint typecheck test-coverage database-migrate-release test-browser
 
-# Install the browser and run the complete GitHub Actions validation entry point.
-ci: browser-install-ci validate
+# Install the browser, validate the app, and build its production image in CI.
+ci: browser-install-ci validate container-build
 
 # Print the active project tool versions.
 runtime:
