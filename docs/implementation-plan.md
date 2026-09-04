@@ -8,11 +8,13 @@
 - Delivery model: Complete and validate one stage before expanding the next stage.
 - Scope rule: Work not required by the product brief or a stage exit gate is deferred.
 - Evidence rule: A stage is complete only when its commands and behavior are reproducible.
+- Reporting rule: Add a compact report under `docs/stage-reports/` when each stage completes.
 
 ## Stage 1: Application foundation
 
 **Status:** Complete. Verified from a clean temporary working directory using the pinned Node.js
-version and a Podman-hosted PostgreSQL database.
+version and a Podman-hosted PostgreSQL database. See
+[`stage-01-foundation.md`](stage-reports/stage-01-foundation.md).
 
 ### Outcome
 

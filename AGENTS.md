@@ -55,17 +55,17 @@ only documenting it here.
 
 ## Build / Test / Validation
 
-- Install: `pnpm install --frozen-lockfile`
-- Build: `pnpm build`
-- Test: `pnpm test:coverage && pnpm test:e2e`
-- Lint: `pnpm format:check && pnpm lint`
-- Typecheck: `pnpm typecheck`
-- Validation: Run formatting, lint, typecheck, unit coverage, migrations, build, and browser tests.
-- Run one test: `pnpm vitest run path/to/file.test.ts`
+- Install: `just install`
+- Build: `just build`
+- Test: `just test-coverage && just test-browser`
+- Lint: `just format-check && just lint`
+- Typecheck: `just typecheck`
+- Validation: `just validate`
+- Run one test: `just test-one path/to/file.test.ts`
 
 ## Local Workflow Notes
 
-- Preferred commands: Use pnpm scripts and Podman commands documented in `README.md`.
+- Preferred commands: Use `just` recipes; package scripts are low-level implementation details.
 - Safe-to-edit areas: Application source, tests, migrations, and project documentation.
 - Areas requiring extra care: Workspace scoping, job idempotency, migration history, and adapters.
 - Review expectations: Check valid, invalid, boundary, authorization, interruption, and retry paths.

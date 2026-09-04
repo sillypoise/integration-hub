@@ -18,6 +18,7 @@ unverified version numbers here.
 - Runtime: Node.js 22 LTS for portfolio alignment and a defined support lifecycle.
 - Language: TypeScript with strict compiler settings across UI, API, and worker.
 - Package manager: pnpm with a committed lockfile for deterministic installs.
+- Command runner: Just as the single developer and CI entry point for project commands.
 - Web framework: Next.js App Router for visible Next.js evidence in one application.
 - UI: React, Tailwind CSS, and selected shadcn/ui components for polished delivery.
 - Validation: Zod for untrusted HTTP, form, and adapter data.
@@ -67,9 +68,9 @@ system, field-mapping language, or dynamic code-loading mechanism.
 - Browser: Playwright for the primary flow, responsive boundaries, denial, and recovery.
 - Real adapter: An opt-in Vitest test with maintainer secrets for the sandbox flow.
 
-CI will run install, formatting check, lint, typecheck, unit tests, database integration tests,
-build, and a focused browser smoke test. Tests must cover valid, invalid, duplicate, unauthorized,
-retry boundary, retry exhaustion, and interrupted-worker paths.
+CI will invoke `just ci` to run formatting, lint, typecheck, unit tests, database migrations, build,
+and a focused browser smoke test. Tests must cover valid, invalid, duplicate, unauthorized, retry
+boundary, retry exhaustion, and interrupted-worker paths.
 
 ## Security model
 

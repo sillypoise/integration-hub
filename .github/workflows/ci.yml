@@ -37,23 +37,11 @@ jobs:
                   node-version-file: .nvmrc
             - name: Enable pnpm
               run: corepack enable pnpm
+            - name: Configure Just
+              uses: extractions/setup-just@v3
+              with:
+                  just-version: 1.43.1
             - name: Install dependencies
-              run: pnpm install --frozen-lockfile
-            - name: Check formatting
-              run: pnpm format:check
-            - name: Lint
-              run: pnpm lint
-            - name: Typecheck
-              run: pnpm typecheck
-            - name: Run unit tests
-              env:
-                  NODE_ENV: test
-              run: pnpm test:coverage
-            - name: Apply database migrations
-              run: pnpm db:migrate
-            - name: Build
-              run: pnpm build
-            - name: Install Chromium
-              run: pnpm exec playwright install --with-deps chromium
-            - name: Run browser smoke tests
-              run: pnpm test:e2e
+              run: just install
+            - name: Validate application
+              run: just ci
