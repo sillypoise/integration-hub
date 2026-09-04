@@ -24,10 +24,18 @@ because the installed CLI reports `Unauthorized` for the available token.
 - Readiness returns a safe `503` during a local database outage and recovers after restart.
 - Readiness success and safe database-failure responses pass automated tests.
 - Direct `SIGTERM` stops job intake and logs completed shutdown.
+- The production OCI image builds, starts as a non-root user, and passes liveness and database
+  readiness checks in hosted CI.
+- GitHub Actions run
+  [`33922171359`](https://github.com/sillypoise/integration-hub/actions/runs/33922171359) passed
+  formatting, linting, typechecking, migrations, unit and browser tests, and the container smoke
+  test.
+
+Local image pulling previously timed out during registry TLS negotiation. Hosted CI provided the
+reviewer-visible image build and runtime check instead.
 
 ## Open exit gates
 
-- Build and run the OCI image; registry access currently times out during TLS negotiation.
 - Authenticate Railway, deploy both services, and verify HTTPS health checks.
 - Terminate the Railway application during queued work and verify one completion after restart.
 - Record measured idle usage and projected monthly cost from Railway metrics.
