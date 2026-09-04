@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 
-import { database_pool } from "../../../lib/database/database_pool.ts";
-import { application_logger } from "../../../lib/observability/application_logger.ts";
+import { check_database_readiness } from "../../../lib/database/database_readiness.ts";
 
 const ready_response_body = JSON.stringify({ status: "ready" });
 const unavailable_response_body = JSON.stringify({ code: "DEPENDENCY_UNAVAILABLE" });
@@ -11,27 +10,20 @@ const response_headers = {
 };
 
 export async function GET(): Promise<Response> {
-    try {
-        const result = await database_pool.query<{ p1_ready: number }>({
-            name: "p1_readiness",
-            text: "SELECT 1 AS p1_ready",
-            values: [],
-        });
+    const database_ready = await check_database_readiness();
 
-        assert.equal(result.rowCount, 1);
-        assert.equal(result.rows[0]?.p1_ready, 1);
+    assert.equal(typeof database_ready, "boolean");
+    assert.ok(ready_response_body.length > 0);
 
+    if (database_ready) {
         return new Response(ready_response_body, {
             headers: response_headers,
             status: 200,
         });
-    } catch (error: unknown) {
-        const error_type = error instanceof Error ? error.name : "UnknownError";
-        application_logger.error({ error_type }, "Readiness database check failed.");
-
-        return new Response(unavailable_response_body, {
-            headers: response_headers,
-            status: 503,
-        });
     }
+
+    return new Response(unavailable_response_body, {
+        headers: response_headers,
+        status: 503,
+    });
 }

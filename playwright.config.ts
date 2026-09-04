@@ -32,7 +32,6 @@ export default defineConfig({
             DATABASE_SSL: "disable",
             DATABASE_URL:
                 "postgresql://integration_hub:integration_hub@127.0.0.1:5432/integration_hub",
-            LOG_LEVEL: "error",
             NODE_ENV: "production",
             PORT: String(port),
             SERVER_HOST: "127.0.0.1",

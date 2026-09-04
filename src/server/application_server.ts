@@ -3,7 +3,6 @@ import { createServer, type Server } from "node:http";
 import next from "next";
 
 import { read_server_environment } from "../lib/config/server_environment.ts";
-import { close_database_pool } from "../lib/database/database_pool.ts";
 import { start_job_runtime, stop_job_runtime } from "../lib/jobs/job_runtime.ts";
 import { application_logger } from "../lib/observability/application_logger.ts";
 
@@ -81,7 +80,6 @@ function application_server_create_shutdown(
         application_logger.info({ signal }, "Application shutdown started.");
         server.close();
         await stop_job_runtime();
-        await close_database_pool();
         await close_application();
         process.exitCode = 0;
         application_logger.info({ signal }, "Application shutdown completed.");

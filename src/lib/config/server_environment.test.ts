@@ -5,7 +5,6 @@ import { read_server_environment } from "./server_environment";
 const valid_environment = Object.freeze({
     DATABASE_SSL: "disable",
     DATABASE_URL: "postgresql://user:password@localhost:5432/integration_hub",
-    LOG_LEVEL: "info",
     NODE_ENV: "test",
     PORT: "3000",
     SERVER_HOST: "127.0.0.1",

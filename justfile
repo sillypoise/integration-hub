@@ -45,7 +45,6 @@ container-start:
     podman run --detach --replace --name integration-hub-application \
         --env DATABASE_SSL=disable \
         --env DATABASE_URL="$database_url" \
-        --env LOG_LEVEL=info \
         --env PORT=3000 \
         --env SERVER_HOST=0.0.0.0 \
         --publish 127.0.0.1:3000:3000 \

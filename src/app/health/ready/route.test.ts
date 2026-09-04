@@ -1,16 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-    error: vi.fn<(context: unknown, message: string) => void>(),
-    query: vi.fn<() => Promise<{ rowCount: number; rows: { p1_ready: number }[] }>>(),
+    check_database_readiness: vi.fn<() => Promise<boolean>>(),
 }));
 
-vi.mock("../../../lib/database/database_pool.ts", () => ({
-    database_pool: { query: mocks.query },
-}));
-
-vi.mock("../../../lib/observability/application_logger.ts", () => ({
-    application_logger: { error: mocks.error },
+vi.mock("../../../lib/database/database_readiness.ts", () => ({
+    check_database_readiness: mocks.check_database_readiness,
 }));
 
 import { GET } from "./route";
@@ -18,12 +13,11 @@ import { GET } from "./route";
 describe("GET /health/ready", () => {
     // These tests prove both dependency-ready and safe dependency-failure contracts.
     beforeEach(() => {
-        mocks.error.mockReset();
-        mocks.query.mockReset();
+        mocks.check_database_readiness.mockReset();
     });
 
     it("returns ready after the bounded database check succeeds", async () => {
-        mocks.query.mockResolvedValue({ rowCount: 1, rows: [{ p1_ready: 1 }] });
+        mocks.check_database_readiness.mockResolvedValue(true);
 
         const response = await GET();
 
@@ -33,14 +27,13 @@ describe("GET /health/ready", () => {
     });
 
     it("returns a safe unavailable response when the database check fails", async () => {
-        mocks.query.mockRejectedValue(new Error("secret provider detail"));
+        mocks.check_database_readiness.mockResolvedValue(false);
 
         const response = await GET();
         const body = await response.text();
 
         expect(response.status).toBe(503);
         expect(body).toBe('{"code":"DEPENDENCY_UNAVAILABLE"}');
-        expect(body).not.toContain("secret provider detail");
-        expect(mocks.error).toHaveBeenCalledOnce();
+        expect(body).not.toContain("provider detail");
     });
 });

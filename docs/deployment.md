@@ -17,7 +17,6 @@ query and returns a bounded `503 DEPENDENCY_UNAVAILABLE` response on failure.
 ```text
 DATABASE_SSL=disable
 DATABASE_URL=${{Postgres.DATABASE_PRIVATE_URL}}
-LOG_LEVEL=info
 NEXT_TELEMETRY_DISABLED=1
 SERVER_HOST=0.0.0.0
 ```

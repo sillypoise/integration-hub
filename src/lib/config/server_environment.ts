@@ -4,7 +4,6 @@ import { z } from "zod";
 const server_environment_schema = z.object({
     DATABASE_SSL: z.enum(["disable", "verify-full"]),
     DATABASE_URL: z.url().startsWith("postgresql://"),
-    LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]),
     NODE_ENV: z.enum(["development", "test", "production"]),
     PORT: z.coerce.number().int().min(1_024).max(65_535),
     SERVER_HOST: z.string().min(1).max(253),
