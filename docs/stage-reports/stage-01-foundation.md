@@ -7,9 +7,9 @@ Complete. The foundation was also verified from a clean temporary working direct
 ## Delivered
 
 - Scaffolded Next.js App Router, React, strict TypeScript, and Tailwind CSS.
-- Pinned Node.js, pnpm, application, test, lint, and format versions.
+- Pinned the CI Node.js target, pnpm, application, test, lint, and format versions.
 - Added Oxfmt, type-aware Oxlint, Vitest coverage, and Playwright browser checks.
-- Centralized supported developer and CI commands in `justfile`.
+- Centralized supported developer and CI commands in `justfile` without requiring Corepack.
 - Added Podman-hosted PostgreSQL instructions and an initial Drizzle migration.
 - Added generic, fail-closed server environment validation.
 - Added the application shell and non-cacheable `/health/live` contract.

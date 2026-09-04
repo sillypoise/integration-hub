@@ -2,7 +2,6 @@ set dotenv-filename := ".env.local"
 set dotenv-load := true
 set shell := ["bash", "-euo", "pipefail", "-c"]
 
-node_version := "22.23.2"
 postgres_container := "integration-hub-postgres"
 postgres_image := "docker.io/library/postgres:17.11-alpine3.23"
 postgres_volume := "integration_hub_postgres_data"
@@ -13,7 +12,7 @@ default:
 
 # Install exactly the dependencies recorded in the lockfile.
 install:
-    corepack pnpm install --frozen-lockfile
+    pnpm install --frozen-lockfile
 
 # Create the local environment file without replacing an existing file.
 environment:
@@ -29,59 +28,59 @@ bootstrap: install environment database-start database-migrate
 
 # Start the development server.
 dev:
-    corepack pnpm dev
+    pnpm dev
 
 # Create the production application build.
 build:
-    corepack pnpm build
+    pnpm build
 
 # Format supported project files.
 format:
-    corepack pnpm format
+    pnpm format
 
 # Verify formatting without changing files.
 format-check:
-    corepack pnpm format:check
+    pnpm format:check
 
 # Run type-aware Oxlint checks with warnings denied.
 lint:
-    corepack pnpm lint
+    pnpm lint
 
 # Generate Next.js route types and run the TypeScript compiler.
 typecheck:
-    corepack pnpm typecheck
+    pnpm typecheck
 
 # Run unit tests without coverage enforcement.
 test:
-    corepack pnpm test
+    pnpm test
 
 # Run one unit test file.
 test-one test_file:
-    corepack pnpm vitest run --config vitest.config.ts {{ quote(test_file) }}
+    pnpm vitest run --config vitest.config.ts {{ quote(test_file) }}
 
 # Run unit tests with configured coverage thresholds.
 test-coverage:
-    corepack pnpm test:coverage
+    pnpm test:coverage
 
 # Install the pinned Playwright Chromium browser.
 browser-install:
-    corepack pnpm exec playwright install chromium
+    pnpm exec playwright install chromium
 
 # Install Chromium and its operating-system packages in CI.
 browser-install-ci:
-    corepack pnpm exec playwright install --with-deps chromium
+    pnpm exec playwright install --with-deps chromium
 
 # Build and run browser smoke tests against the production server.
 test-browser: build
-    corepack pnpm test:e2e
+    pnpm test:e2e
 
 # Generate a Drizzle migration from the current schema.
 database-generate:
-    corepack pnpm db:generate
+    pnpm db:generate
 
 # Apply pending Drizzle migrations.
 database-migrate:
-    corepack pnpm db:migrate
+    pnpm db:migrate
 
 # Start local PostgreSQL in Podman and wait at most 45 seconds for health.
 database-start:
@@ -116,9 +115,9 @@ validate: format-check lint typecheck test-coverage database-migrate test-browse
 # Install the browser and run the complete GitHub Actions validation entry point.
 ci: browser-install-ci validate
 
-# Print the runtime version expected by this repository.
+# Print the active project tool versions.
 runtime:
-    @echo "Node.js {{node_version}}"
-    @echo "pnpm $(corepack pnpm --version)"
+    @echo "Node.js $(node --version)"
+    @echo "pnpm $(pnpm --version)"
     @just --version
     @podman --version

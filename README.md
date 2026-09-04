@@ -19,12 +19,11 @@ Stage 1 is complete. The product boundary is documented in
 
 Prerequisites:
 
-- Node.js 22.23.2 and pnpm 10.33.2.
+- Node.js 22.23.2 through 24.x and pnpm 10.33.2. CI uses Node.js 22.23.2.
 - Just 1.43.1.
 - Podman 5 or newer.
 
 ```bash
-corepack enable pnpm
 just bootstrap
 just dev
 ```
