@@ -89,9 +89,10 @@ Exceeding USD 25 in a month triggers a hosting review.
 
 ## Deployment evidence
 
-Deployment `2fb54cab-9c55-499e-aa99-fe8ef0d43839` passed its database readiness health check at
-<https://p1-integration-hub-production.up.railway.app>. Its pre-deploy command created
-`p1_migrations.p1_drizzle_migrations`, and pg-boss created only vendor tables in `p1_job`.
+Deployment `43db3146-da4d-4385-8302-261b7689a84c` passed its migration and database readiness health
+check at <https://p1-integration-hub-production.up.railway.app>. Its pre-deploy command applied all
+three migrations in `p1_migrations.p1_drizzle_migrations`; project tables remain in `public`, and
+pg-boss creates only vendor tables in `p1_job`.
 
 A delayed diagnostic job was queued before a service redeploy. The replacement process completed
 that job with `retry_count = 0`, and hosted logs contained exactly one completion event for its

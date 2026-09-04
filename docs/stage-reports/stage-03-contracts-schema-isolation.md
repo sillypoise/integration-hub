@@ -36,6 +36,16 @@ boundaries, and an isolated public workspace credential.
 - Cleanup respects its batch boundary and preserves active and unselected workspaces.
 - Browser-server coverage verifies origin denial, opaque cookie issuance, and authenticated
   workspace lookup.
+- GitHub Actions run
+  [`33928030317`](https://github.com/sillypoise/integration-hub/actions/runs/33928030317) passed the
+  empty-database migration, 44 tests, coverage thresholds, browser checks, and production-container
+  smoke test.
+- Railway deployment `43db3146-da4d-4385-8302-261b7689a84c` passed its migration and readiness gate.
+- Hosted boundary probes returned `401` without a cookie, `403` for a foreign origin, `201` for
+  issuance, and `200` for subsequent cookie authentication. The issued cookie had HTTP-only, Secure,
+  and SameSite Strict attributes.
+- Hosted inspection found five `p1_` domain tables, no unprefixed project columns, three applied
+  migrations, one cleanup schedule, and 64-character stored token hashes.
 
 ## Contract delta
 
