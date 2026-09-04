@@ -16,7 +16,7 @@ query and returns a bounded `503 DEPENDENCY_UNAVAILABLE` response on failure.
 
 ```text
 DATABASE_SSL=disable
-DATABASE_URL=${{Postgres.DATABASE_PRIVATE_URL}}
+DATABASE_URL=${{portfolio-postgres.DATABASE_PRIVATE_URL}}
 NEXT_TELEMETRY_DISABLED=1
 SERVER_HOST=0.0.0.0
 ```
@@ -29,15 +29,24 @@ the public deployment.
 
 ## Initial deployment commands
 
-Authenticate interactively before running these commands:
+Authenticate interactively and link this repository to the shared portfolio project:
 
 ```bash
 railway login
-railway init --name integration-hub
-railway add --database postgres
-railway add --service integration-hub --repo sillypoise/integration-hub
-railway up --service integration-hub --detach
+railway link --project upwork-portfolio --environment production
+railway add --service p1-integration-hub --repo sillypoise/integration-hub
+railway up --service p1-integration-hub --detach
 ```
+
+Provision one managed PostgreSQL service only if the portfolio project does not already have its
+canonical shared database:
+
+```bash
+railway add --database postgres
+```
+
+Name that service `portfolio-postgres`; other portfolio applications reuse it with their own
+prefixes and vendor schemas.
 
 Then configure the required variables, generate a public domain, and verify:
 
@@ -67,6 +76,7 @@ be recorded after seven days. Exceeding USD 25 in a month triggers a hosting rev
 
 ## Current blocker
 
-The local Railway CLI is installed, but `railway whoami` returns `Unauthorized`. No Railway project
-or service has been created yet. Stage 2 cannot pass its deployment exit gate until authentication
-is restored and the restart checks run against Railway.
+The local Railway CLI resolves the existing `upwork-portfolio` project metadata, but authenticated
+queries and service creation return `Unauthorized`. No Integration Hub service was created by this
+stage. Stage 2 cannot pass its deployment exit gate until authentication is restored and the restart
+checks run against Railway.
