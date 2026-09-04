@@ -30,4 +30,4 @@ Complete. The foundation was also verified from a clean temporary working direct
   upgrades must re-test whether it can be removed.
 - The exact PostgreSQL image pull encountered a transient Docker Hub TLS timeout during validation.
   The available cached image was independently confirmed as PostgreSQL 17.11.
-- Hosted CI remains unverified until the first GitHub push completes.
+- Hosted `just ci` validation passed on GitHub Actions after the first push.
