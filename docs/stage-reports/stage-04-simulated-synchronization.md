@@ -2,7 +2,8 @@
 
 ## Status
 
-Implementation and local validation complete. Hosted CI and Railway verification are pending.
+Complete. Local validation, hosted CI, production-container smoke testing, and Railway
+migration/HTTP/database verification passed.
 
 ## Delivered
 
@@ -32,6 +33,22 @@ Implementation and local validation complete. Hosted CI and Railway verification
   dependency errors.
 - Five Playwright checks pass against the production server, including complete synchronization and
   independent visitor isolation. Formatting, type-aware lint, typecheck, build, and coverage pass.
+
+## Hosted verification
+
+- Commit `598960d` passed
+  [CI run 33932468932](https://github.com/sillypoise/integration-hub/actions/runs/33932468932):
+  empty PostgreSQL 17 migrations, 110 tests, 99.01% statement coverage, five Playwright checks,
+  production build, and OCI container smoke test.
+- Railway deployment `b00d5c27-5528-4376-a9de-c1f67f15feab` passed pre-deploy migration and
+  readiness. Hosted history contains four migrations.
+- Run `85fe8df8-fac1-479e-b9b8-eec9f259076b` accepted a generated customer event and completed with
+  one CRM effect, one customer, one successful attempt, and zero pg-boss retries. Repeated intake
+  returned the same run. Hosted logs correlate both intake responses and worker completion.
+- HTTPS probes confirmed `202` acceptance, `200` duplicate/read, `400` invalid input, `401` missing
+  credentials, `403` foreign origin, and `404` cross-workspace detail. Responses were non-cacheable.
+- The retired diagnostic queue was verified to have no pending/active jobs and then removed using
+  pg-boss's queue deletion API. Public actions still cannot invoke real provider adapters.
 
 ## Contract and design review
 

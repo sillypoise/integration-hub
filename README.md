@@ -9,7 +9,7 @@ public demo without pretending to be a general-purpose integration platform.
 
 ## Status
 
-Stages 1 through 3 are complete; Stage 4 is in progress. The product boundary is documented in
+Stages 1 through 4 are complete; Stage 5 is next. The product boundary is documented in
 [`docs/product-brief.md`](docs/product-brief.md), the stack in
 [`docs/tech-stack.md`](docs/tech-stack.md), and the delivery sequence in
 [`docs/implementation-plan.md`](docs/implementation-plan.md). Completed work is summarized in
@@ -28,8 +28,8 @@ just bootstrap
 just dev
 ```
 
-The application is available at `http://localhost:3000`. Stop the database with
-`just database-stop`. The named volume remains intact.
+The application is available at `http://127.0.0.1:3000` (matching `APPLICATION_ORIGIN`). Stop the
+database with `just database-stop`. The named volume remains intact.
 
 Run `just` to list supported commands. Run the complete local validation with:
 

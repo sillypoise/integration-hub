@@ -69,8 +69,8 @@ curl --fail --silent --show-error https://DEPLOYED_DOMAIN/health/ready
 Apply `0003_create_crm_simulator.sql` through the existing pre-deploy migration command. The new
 application registers `p1_synchronization` before accepting HTTP. Existing workspaces remain valid;
 there was no public event-intake route before Stage 4. Diagnostic producer/worker code is retired.
-After the new version is healthy, remove the old private `p1_diagnostic` queue through pg-boss's
-`deleteQueue` API, not by editing vendor schema tables.
+The old private `p1_diagnostic` queue was verified idle and removed through pg-boss's `deleteQueue`
+API after Stage 4 became healthy; no vendor schema tables were edited.
 
 Run tests only against a disposable development or CI database: integration checks intentionally
 reset synthetic domain data and test synchronization jobs. Browser checks start `pnpm start` so the
@@ -101,11 +101,17 @@ Exceeding USD 25 in a month triggers a hosting review.
 
 ## Deployment evidence
 
-Deployment `43db3146-da4d-4385-8302-261b7689a84c` passed its migration and database readiness health
-check at <https://p1-integration-hub-production.up.railway.app>. Its pre-deploy command applied all
-three migrations in `p1_migrations.p1_drizzle_migrations`; project tables remain in `public`, and
-pg-boss creates only vendor tables in `p1_job`.
+Deployment `b00d5c27-5528-4376-a9de-c1f67f15feab` passed its migration and database readiness health
+check at <https://p1-integration-hub-production.up.railway.app>. Hosted inspection confirms four
+applied migrations and a successful simulated CRM effect; project tables remain in `public`, and
+pg-boss internals remain in `p1_job`.
 
-A delayed diagnostic job was queued before a service redeploy. The replacement process completed
-that job with `retry_count = 0`, and hosted logs contained exactly one completion event for its
-probe ID. This verifies durable recovery and one logical effect for the tested restart path.
+The Stage 4 public API probe accepted a synthetic event, converged duplicate delivery onto the same
+run, and completed one successful attempt and CRM effect with zero delivery retries. Authorization,
+origin, invalid-input, and cross-workspace checks passed. Evidence is recorded in the
+[Stage 4 report](stage-reports/stage-04-simulated-synchronization.md).
+
+During Stage 2, a delayed diagnostic job was queued before a service redeploy. The replacement
+process completed that job with `retry_count = 0`, and hosted logs contained exactly one completion
+event for its probe ID. This verifies durable recovery and one logical effect for the tested restart
+path.

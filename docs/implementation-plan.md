@@ -98,9 +98,8 @@ The system has explicit state transitions and an isolated public-demo security b
 
 ## Stage 4: Simulated synchronization vertical slice
 
-**Status:** Implementation complete; hosted verification pending. The simulator flow, atomic queue
-insertion, CRM effect persistence, scoped APIs, interruption recovery, and local browser checks are
-implemented. See
+**Status:** Complete. The simulator flow, atomic queue insertion, CRM effect persistence, scoped
+APIs, interruption recovery, local/browser checks, hosted CI, and Railway verification passed. See
 [`stage-04-simulated-synchronization.md`](stage-reports/stage-04-simulated-synchronization.md).
 
 ### Outcome
