@@ -166,7 +166,8 @@ simulated and cannot be reconfigured.
 
 ## Stage 6: Failure, retry, and recovery flow
 
-**Status:** Implementation under validation; hosted verification pending. See
+**Status:** Complete. Bounded simulator failures, durable retries, one manual restoration, audited
+reset, local validation, hosted CI, and public Railway verification passed. See
 [`stage-06-failure-recovery.md`](stage-reports/stage-06-failure-recovery.md).
 
 ### Outcome

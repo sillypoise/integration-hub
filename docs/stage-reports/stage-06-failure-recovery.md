@@ -2,7 +2,7 @@
 
 ## Status
 
-Implementation and local validation complete. Hosted CI and deployment verification remain pending.
+Complete. Local validation, hosted CI, Railway deployment, and public recovery checks passed.
 
 ## Delivered
 
@@ -37,6 +37,28 @@ reset, automatic third-attempt recovery, and foreign recovery denial. Screenshot
 exhaustion and restoration show readable responsive controls and preserved failure history.
 Checkboxes require confirmation and receive native invalid-submit focus. This is not a formal
 accessibility certification or physical-device test.
+
+## Hosted evidence
+
+- Implementation commit `1bf2d4c` passed
+  [CI run 33940590833](https://github.com/sillypoise/integration-hub/actions/runs/33940590833) in
+  5m5s, including empty-database migrations, all tests, and production-container smoke testing.
+- Old deployment was confirmed `REMOVED` before the Stage 6 deployment. PostgreSQL and service
+  configuration were preserved. Deployment `ba1a60c9-6532-4344-888f-f0346c0d9e24` reached `SUCCESS`;
+  migrations, application startup, liveness, and readiness passed.
+- Real hosted Desktop Chrome and Pixel 7 flows exhausted runs `266928f8-0ceb-4bde-a90d-b99f97996722`
+  and `001f17ca-0138-4560-8f9c-cd51601b0e7c`, then restored each on attempt four. Foreign retry
+  returned `404`, foreign origin `403`, repeated retry `409`, and anonymous reset `401`. UI reset
+  removed only the probe's records; other-workspace reset did not affect the owner run. Duplicate
+  reset requests were harmless.
+- Hosted automatic probes: rate limit `8e70a63f-c7d2-4ef4-9dec-15df58cbc970` succeeded on attempt
+  two; temporary outage `feca2f59-1ca2-4f61-a576-b10dcc8a9258` succeeded on three; invalid
+  destination `b952ce32-9767-4a86-b964-bc2367fee909` stopped on one with no next attempt/effect.
+  Their overview returned two succeeded, one attention, zero pending, and `no-store`. An unsupported
+  `real` scenario returned `400`.
+- Read-only hosted database inspection confirmed five migrations and, across the two reset UI probe
+  workspaces, two each of workspace-created, event-accepted, retry-requested, and workspace-reset
+  audit rows. Reset did not erase the audit trail.
 
 ## Contract and operating notes
 

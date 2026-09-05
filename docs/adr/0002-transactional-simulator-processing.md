@@ -7,6 +7,10 @@
   `src/lib/synchronization/worker_interruption.integration.test.ts`, and
   `tests/browser/synchronization.spec.ts`.
 
+Stage 6 extends this decision in [ADR 0003](0003-bounded-simulated-recovery.md): later delivery jobs
+have separate UUIDs, scheduled failures become visible, and one manual restoration widens the
+lifetime attempt/detail bound to four. Successful-effect transaction semantics remain unchanged.
+
 ## Decision
 
 Persist the immutable source event, logical run, acceptance audit, and pg-boss job in one PostgreSQL

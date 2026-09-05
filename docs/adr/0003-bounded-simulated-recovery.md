@@ -1,6 +1,6 @@
 # ADR 0003: Bounded simulated failure and recovery
 
-- Status: Accepted for Stage 6; deployment verification pending.
+- Status: Accepted and deployed in Stage 6.
 - Owner: Repository maintainer.
 - Scope: Public synthetic commerce-to-CRM synchronization only.
 

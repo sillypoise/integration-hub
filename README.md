@@ -9,9 +9,9 @@ public demo without pretending to be a general-purpose integration platform.
 
 ## Status
 
-Stages 1 through 5 are complete. Stage 6 implementation is under validation; hosted release is
-pending. The product boundary is documented in [`docs/product-brief.md`](docs/product-brief.md), the
-stack in [`docs/tech-stack.md`](docs/tech-stack.md), and the delivery sequence in
+Stages 1 through 6 are complete; Stage 7 is next. The product boundary is documented in
+[`docs/product-brief.md`](docs/product-brief.md), the stack in
+[`docs/tech-stack.md`](docs/tech-stack.md), and the delivery sequence in
 [`docs/implementation-plan.md`](docs/implementation-plan.md). Completed work is summarized in
 [`docs/stage-reports/`](docs/stage-reports/).
 

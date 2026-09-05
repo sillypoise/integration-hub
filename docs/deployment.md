@@ -118,7 +118,13 @@ fix forward rather than deploying Stage 5 code over new jobs. See
 
 ## Deployment evidence
 
-Current Stage 5 deployment `a2a8a78b-314c-4910-920b-c12c2f941e6b` passed release and readiness. The
+Current Stage 6 deployment `ba1a60c9-6532-4344-888f-f0346c0d9e24` passed release and readiness
+following the controlled worker cutover. Hosted desktop/mobile flows verified exhaustion, manual
+restoration, reset, and denial paths; separate probes verified automatic recovery and immediate
+terminal failure. Five migrations and retained audit history were confirmed. See the
+[Stage 6 report](stage-reports/stage-06-failure-recovery.md).
+
+Previous Stage 5 deployment `a2a8a78b-314c-4910-920b-c12c2f941e6b` passed release and readiness. The
 public UI completed the full customer-update flow in both Desktop Chrome and Pixel 7 emulation;
 scoped overview totals and negative HTTP checks passed. See the
 [Stage 5 report](stage-reports/stage-05-operational-ui.md). This release added no migration.
