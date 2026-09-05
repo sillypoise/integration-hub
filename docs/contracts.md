@@ -32,11 +32,24 @@ before persistence. A workspace can own at most 1,000 retained source events.
 A repeated idempotency key returns the existing source event and synchronization run. It must not
 create another logical run.
 
+## Commerce simulator generator
+
+The internal generator accepts only `p1_customer_number` and `p1_revision`, both integers from 1
+through 1,000 inclusive. Unknown fields, coercible strings, and client-provided customer details or
+adapter choices are rejected. This is an additive internal contract, not yet a public HTTP endpoint.
+
+Identical inputs produce identical source events. The external customer ID depends only on the
+customer number; the event idempotency key includes the revision. Email addresses use the reserved
+`example.test` domain. Source time is a logical timestamp: 2026-01-01 UTC plus revision seconds, not
+a claim about an actual commerce-system update. Returned events and customer objects are frozen.
+
 ## Mapped customer
 
 The destination-facing value is a strict object containing `p1_external_id`, `p1_email`,
 `p1_first_name`, `p1_last_name`, and `p1_source_updated_at`. It carries no workspace token, provider
-credential, or unaccepted source field.
+credential, or unaccepted source field. The pure mapping function validates the complete source
+contract before selecting these fields, preserves the source timestamp including its offset, and
+returns a frozen destination object without mutating its input.
 
 ## Synchronization job
 
@@ -81,6 +94,53 @@ expired, and cross-workspace credentials are denied without distinguishing the r
 expire after 24 hours. At most 500 can be active, and cleanup deletes at most 100 expired workspaces
 per invocation.
 
+## Simulated synchronization HTTP API
+
+These additive `v1` endpoints are owned by the repository maintainer. Every response is JSON with
+`Cache-Control: no-store`. Every endpoint requires the workspace cookie; callers cannot supply a
+workspace ID or adapter authority. The public source is synthetic and the destination is simulated.
+
+- `POST /api/demo/events`: requires the exact configured `Origin` and an `application/json` body
+  containing only the two commerce-generator integers. Raw bodies are limited to 16 KiB and five
+  seconds; unknown fields, malformed JSON, invalid UTF-8, and out-of-range values return
+  `400 INVALID_INPUT`. `p1_fields` is a bounded array drawn only from `p1_customer_number` and
+  `p1_revision`; body-level errors use an empty array. No rejected input is echoed.
+- A new event returns `202` with `code: EVENT_ACCEPTED`, `duplicate: false`, `p1_run_id`,
+  `p1_source_event_id`, and `p1_correlation_id`. This confirms durable acceptance, not successful
+  synchronization. The correlation UUID equals the run UUID. A duplicate returns the same IDs,
+  `duplicate: true`, and `200 DUPLICATE_EVENT`. Workspace expiry and capacity errors retain their
+  existing `401` and `409` meanings.
+- `GET /api/demo/runs?p1_page=1`: accepts one optional decimal page number, 1–50. Unknown or
+  repeated query parameters, leading zeroes, and non-integer pages return `400 INVALID_INPUT`.
+  Returns `p1_runs`, `p1_page`, and `p1_page_size: 20`; rows are sorted by creation time then UUID
+  descending. Summaries include run/source IDs, state, delivery state, attempt count, and
+  creation/completion timestamps. Pagination is a live view, not a snapshot across concurrent new
+  events.
+- `GET /api/demo/runs/{run_id}`: requires one valid UUID and no query parameters. Returns IDs,
+  correlation ID, state, delivery state, counts/timestamps, safe source type/external ID/source
+  time, the mapped destination effect or null, and at most three ordered attempts. Attempt fields
+  are number, state, safe error code, start time, and completion time. `p1_destination_mode` is
+  always `simulated`. Raw source payloads and cookies are never returned. Missing and
+  other-workspace runs both return `404 RESOURCE_NOT_FOUND` after authentication; unusable cookies
+  return `401` first.
+
+All new endpoints return `503 DEPENDENCY_UNAVAILABLE` on dependency failure without database or
+provider details. Public source fields cannot invoke real adapters. The destination snapshot is the
+mapped result for this event, not a claim that it is still the customer's latest revision.
+
+`p1_delivery_state` is pg-boss's `created`, `retry`, `active`, `completed`, `cancelled`, or
+`failed`, or null after queue retention. It is separate from domain state: exhausted infrastructure
+delivery can leave an unprocessed domain run `queued` with delivery state `failed`. This is
+inspectable and never silently reported as success; domain failure/retry actions arrive in Stage 6.
+Delivery has at most three executions, a 30-second lease, and two-second retry delays. PostgreSQL
+supervision may reclaim expired leases later than 30 seconds; lease duration is not an end-to-end
+latency promise.
+
+Event/run/audit/queue insertion commits atomically. The simulated CRM effect and successful attempt
+commit together; pre-commit interruption rolls both back, while post-commit replay is a no-op. These
+guarantees apply to the database-backed simulator, not remote provider transactions. See
+[ADR 0002](adr/0002-transactional-simulator-processing.md) for decisions and re-evaluation triggers.
+
 ## Safe HTTP errors
 
 Errors contain one stable `code` and no stack, SQL, token, raw payload, or provider detail:
@@ -102,10 +162,10 @@ closed and do not reveal whether a protected resource exists.
 
 ## Retention and ownership
 
-Domain rows are owned by their `p1_workspace_id` and cascade-delete with the workspace. Source
-events are immutable. Runs and attempts retain operational history for the workspace lifetime. Audit
-rows record workspace creation, accepted events, retry requests, and resets without raw customer
-data.
+Domain rows, including CRM customers and effect records, are owned by their `p1_workspace_id` and
+cascade-delete with the workspace. Source events are immutable. Runs and attempts retain operational
+history for the workspace lifetime. Audit rows record workspace creation, accepted events, retry
+requests, and resets without raw customer data.
 
 All project-owned tables, columns, and explicitly named indexes and constraints use the `p1_`
 prefix. The only application-level exception is vendor-owned internals isolated in `p1_job` and

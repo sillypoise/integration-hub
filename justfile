@@ -171,6 +171,10 @@ validate: format-check lint typecheck test-coverage test-browser
 # Install the browser, validate the app, and smoke-test its production image in CI.
 ci: browser-install-ci validate container-smoke
 
+# Deploy the current checkout to the existing Railway application service.
+deploy:
+    railway up --service p1-integration-hub --detach
+
 # Print the active project tool versions.
 runtime:
     @echo "Node.js $(node --version)"

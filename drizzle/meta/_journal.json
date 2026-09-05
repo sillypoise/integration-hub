@@ -22,6 +22,13 @@
       "when": 1788562676130,
       "tag": "0002_enforce_source_event_immutability",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1788566424357,
+      "tag": "0003_create_crm_simulator",
+      "breakpoints": true
     }
   ]
 }

@@ -27,7 +27,8 @@ export default defineConfig({
         },
     ],
     webServer: {
-        command: `pnpm next start --hostname 127.0.0.1 --port ${port}`,
+        // The custom production entry point starts the worker as well as the HTTP server.
+        command: "pnpm start",
         env: {
             APPLICATION_ORIGIN: base_url,
             DATABASE_SSL: "disable",

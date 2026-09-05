@@ -212,7 +212,58 @@ export const p1_audit_events = pgTable(
     ],
 );
 
+export const p1_simulated_crm_customers = pgTable(
+    "p1_simulated_crm_customers",
+    {
+        p1_id: uuid("p1_id").defaultRandom().primaryKey(),
+        p1_workspace_id: uuid("p1_workspace_id")
+            .notNull()
+            .references(() => p1_demo_workspaces.p1_id, { onDelete: "cascade" }),
+        p1_external_id: varchar("p1_external_id", { length: 64 }).notNull(),
+        p1_payload: jsonb("p1_payload").notNull(),
+    },
+    (table) => [
+        unique("p1_simulated_crm_customers_p1_identity_unique").on(
+            table.p1_workspace_id,
+            table.p1_external_id,
+        ),
+        check(
+            "p1_simulated_crm_customers_p1_payload_size_check",
+            sql`octet_length(${table.p1_payload}::text) <= 16384`,
+        ),
+    ],
+);
+
+export const p1_simulated_crm_effects = pgTable(
+    "p1_simulated_crm_effects",
+    {
+        p1_run_id: uuid("p1_run_id").primaryKey(),
+        p1_workspace_id: uuid("p1_workspace_id").notNull(),
+        p1_payload: jsonb("p1_payload").notNull(),
+        p1_created_at: timestamp("p1_created_at", { mode: "date", withTimezone: true })
+            .defaultNow()
+            .notNull(),
+    },
+    (table) => [
+        foreignKey({
+            columns: [table.p1_run_id, table.p1_workspace_id],
+            foreignColumns: [
+                p1_synchronization_runs.p1_id,
+                p1_synchronization_runs.p1_workspace_id,
+            ],
+            name: "p1_simulated_crm_effects_p1_run_workspace_foreign_key",
+        }).onDelete("cascade"),
+        index("p1_simulated_crm_effects_p1_workspace_id_index").on(table.p1_workspace_id),
+        check(
+            "p1_simulated_crm_effects_p1_payload_size_check",
+            sql`octet_length(${table.p1_payload}::text) <= 16384`,
+        ),
+    ],
+);
+
 export const application_schema = {
+    p1_simulated_crm_customers,
+    p1_simulated_crm_effects,
     p1_audit_events,
     p1_demo_workspaces,
     p1_source_events,

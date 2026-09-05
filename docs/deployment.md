@@ -51,7 +51,7 @@ deploy:
 railway add --database postgres
 railway add --service p1-integration-hub
 railway variables --service p1-integration-hub --set 'DATABASE_URL=${{Postgres.DATABASE_URL}}'
-railway up --service p1-integration-hub --detach
+just deploy
 ```
 
 The `Postgres` service is the canonical shared non-production database. Other portfolio applications
@@ -63,6 +63,18 @@ Then configure the required variables, generate a public domain, and verify:
 curl --fail --silent --show-error https://DEPLOYED_DOMAIN/health/live
 curl --fail --silent --show-error https://DEPLOYED_DOMAIN/health/ready
 ```
+
+## Stage 4 release boundary
+
+Apply `0003_create_crm_simulator.sql` through the existing pre-deploy migration command. The new
+application registers `p1_synchronization` before accepting HTTP. Existing workspaces remain valid;
+there was no public event-intake route before Stage 4. Diagnostic producer/worker code is retired.
+After the new version is healthy, remove the old private `p1_diagnostic` queue through pg-boss's
+`deleteQueue` API, not by editing vendor schema tables.
+
+Run tests only against a disposable development or CI database: integration checks intentionally
+reset synthetic domain data and test synchronization jobs. Browser checks start `pnpm start` so the
+production web and worker entry point is exercised together.
 
 ## Cost estimate
 

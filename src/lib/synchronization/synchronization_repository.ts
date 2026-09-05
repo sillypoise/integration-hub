@@ -9,6 +9,7 @@ import {
     type P1RunState,
 } from "../contracts/synchronization_contracts.ts";
 import { with_database_client } from "../database/database_client.ts";
+import { enqueue_p1_synchronization } from "../jobs/synchronization_queue.ts";
 
 export type P1AcceptedSourceEvent = Readonly<{
     duplicate: boolean;
@@ -300,6 +301,11 @@ async function synchronization_repository_insert_event(
 
     assert.equal(result.rowCount, 1);
     assert.ok(result.rows[0]);
+    await enqueue_p1_synchronization(database_client, {
+        ...result.rows[0],
+        p1_correlation_id: result.rows[0].p1_run_id,
+        p1_workspace_id: options.p1_workspace_id,
+    });
 
     return Object.freeze(result.rows[0]);
 }
