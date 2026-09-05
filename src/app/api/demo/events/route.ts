@@ -28,7 +28,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         );
         if (!input.success) {
             // A fixed field allowlist avoids echoing attacker-controlled unknown property names.
-            const fields = ["p1_customer_number", "p1_revision"].filter((field) =>
+            const fields = ["p1_customer_number", "p1_revision", "p1_scenario"].filter((field) =>
                 input.error.issues.some((issue) => issue.path[0] === field),
             );
             return p1_demo_response({ code: "INVALID_INPUT", p1_fields: fields }, 400);
@@ -38,6 +38,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             {
                 current_time: new Date(),
                 p1_workspace_id: workspace.p1_workspace_id,
+                p1_scenario: input.data.p1_scenario,
             },
         );
         if (!accepted.ok) {

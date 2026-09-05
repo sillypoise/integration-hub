@@ -12,14 +12,15 @@ export async function read_p1_overview(p1_workspace_id: string) {
                     p1_job.state AS p1_delivery_state, p1_attempt_count,
                     p1_run.p1_created_at, p1_completed_at,
                     CASE WHEN p1_state = 'succeeded' THEN 'succeeded'
-                         WHEN p1_state IN ('terminal_failure', 'retryable_failure')
+                         WHEN p1_state = 'terminal_failure'
                            OR p1_job.state IN ('failed', 'cancelled') THEN 'attention'
                          ELSE 'pending' END AS p1_category
                 FROM p1_synchronization_runs AS p1_run
                 JOIN p1_demo_workspaces AS p1_workspace
                     ON p1_workspace.p1_id = p1_run.p1_workspace_id
                 LEFT JOIN p1_job.job AS p1_job
-                    ON p1_job.id = p1_run.p1_id AND p1_job.name = 'p1_synchronization'
+                    ON p1_job.id = COALESCE(p1_run.p1_delivery_job_id, p1_run.p1_id)
+                        AND p1_job.name = 'p1_synchronization'
                 WHERE p1_workspace.p1_id = $1 AND p1_expires_at > clock_timestamp()
                 ORDER BY p1_run.p1_created_at DESC, p1_run.p1_id DESC LIMIT 1000
             ) SELECT count(*)::int AS p1_total,

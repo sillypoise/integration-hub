@@ -42,6 +42,14 @@ export function ErrorNotice({
             "Workspace event limit reached",
             "This workspace already contains 1,000 events. You can still inspect existing runs.",
         ],
+        retry_denied: [
+            "Retry not available",
+            "Refresh the run. Active, successful, or already manually retried runs cannot be retried.",
+        ],
+        reset_limit: [
+            "Reset limit reached",
+            "This workspace has used its three resets. You can start a fresh workspace instead.",
+        ],
         unavailable: [
             "We couldn’t reach the service",
             "No fresh result is available. Try again in a moment; never assume an unconfirmed event failed.",
@@ -88,7 +96,7 @@ export function StatusBadge({ run }: Readonly<{ run: P1RunView }>) {
         queued: "Queued",
         processing: "Processing",
         succeeded: "Succeeded",
-        retryable_failure: "Retry needed",
+        retryable_failure: "Retry scheduled",
         terminal_failure: "Failed",
     };
     const label =
@@ -196,7 +204,7 @@ export function RunTable({
                                 <StatusBadge run={run} />
                             </td>
                             <td>
-                                {run.p1_attempt_count} <span className="muted">/ 3</span>
+                                {run.p1_attempt_count} <span className="muted">/ 4 max</span>
                             </td>
                             <td className="date-cell">
                                 <time dateTime={run.p1_created_at}>

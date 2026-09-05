@@ -8,6 +8,7 @@ import {
 } from "../../lib/contracts/demo_views";
 import { ErrorNotice, format_time, LoadingPanel, PageHeader, StatusBadge } from "./presentation";
 import { use_demo_resource } from "./use_demo_resource";
+import { RecoveryControl } from "./recovery_control";
 
 export function DetailScreen({ run_id }: Readonly<{ run_id: string }>) {
     const resource = use_demo_resource(
@@ -50,6 +51,9 @@ export function DetailScreen({ run_id }: Readonly<{ run_id: string }>) {
             {resource.data ? (
                 <>
                     <RunOutcome run={resource.data} />
+                    {detail_can_retry(resource.data) ? (
+                        <RecoveryControl nullable_run_id={run_id} on_complete={resource.refresh} />
+                    ) : null}
                     <div className="detail-grid">
                         <MappingPanel run={resource.data} />
                         <RunTimeline run={resource.data} />
@@ -73,6 +77,14 @@ export function DetailScreen({ run_id }: Readonly<{ run_id: string }>) {
     );
 }
 
+function detail_can_retry(run: P1DetailView) {
+    if (run.p1_manual_retry_count === 1) return false;
+    if (run.p1_state === "succeeded") return false;
+    if (run.p1_state === "processing") return false;
+    if (run.p1_state === "terminal_failure") return true;
+    return ["failed", "cancelled"].includes(run.p1_delivery_state ?? "");
+}
+
 function RunOutcome({ run }: Readonly<{ run: P1DetailView }>) {
     const active = p1_detail_is_active(run);
     return (
@@ -85,7 +97,9 @@ function RunOutcome({ run }: Readonly<{ run: P1DetailView }>) {
                             ? "Customer synchronized"
                             : active
                               ? "Your update is on its way"
-                              : "This run needs a closer look"}
+                              : run.p1_error_code === "RETRY_EXHAUSTED"
+                                ? "Automatic retries exhausted"
+                                : "This run needs a closer look"}
                     </h2>
                 </div>
                 <StatusBadge run={run} />
@@ -95,8 +109,24 @@ function RunOutcome({ run }: Readonly<{ run: P1DetailView }>) {
                     ? "One destination effect recorded. Sending this revision again will not create another."
                     : active
                       ? "The worker will validate, map, and upsert this customer. This view checks for progress automatically."
-                      : "No successful outcome is implied. Failure and manual recovery controls are not available in this stage."}
+                      : "Processing has stopped without a destination effect. Restore and retry once if available, or create a new customer revision. No automatic retry loop continues."}
             </p>
+            <p className="caption">
+                Scenario: {run.p1_scenario.replaceAll("_", " ")}. Three automatic attempts maximum;
+                one manual recovery attempt.
+                {run.p1_manual_retry_count === 1 ? " Manual restoration used for this run." : ""}
+            </p>
+            {run.p1_error_code ? (
+                <p>
+                    <strong>{run.p1_error_code.replaceAll("_", " ")}</strong>
+                </p>
+            ) : null}
+            {run.p1_next_attempt_at ? (
+                <p aria-live="polite">
+                    Next attempt not before {format_time(run.p1_next_attempt_at)} UTC. Worker
+                    availability may delay delivery.
+                </p>
+            ) : null}
             <div className="outcome-facts">
                 <span>
                     <strong>{run.p1_attempt_count}</strong> committed attempt
@@ -188,6 +218,9 @@ function RunTimeline({ run }: Readonly<{ run: P1DetailView }>) {
                         <time dateTime={attempt.p1_started_at}>
                             {format_time(attempt.p1_started_at)} UTC
                         </time>
+                        {attempt.p1_error_code ? (
+                            <p>{attempt.p1_error_code.replaceAll("_", " ")}</p>
+                        ) : null}
                         <p>
                             {attempt.p1_completed_at
                                 ? `Finished ${format_time(attempt.p1_completed_at)} UTC`

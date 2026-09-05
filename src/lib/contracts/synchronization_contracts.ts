@@ -57,6 +57,8 @@ export const p1_safe_error_code_schema = z.enum([
     "INVALID_INPUT",
     "ORIGIN_DENIED",
     "RESOURCE_NOT_FOUND",
+    "RETRY_NOT_ALLOWED",
+    "RESET_LIMIT_REACHED",
     "WORKSPACE_CAPACITY_EXCEEDED",
     "WORKSPACE_UNAUTHORIZED",
 ]);

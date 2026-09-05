@@ -3,12 +3,12 @@
 ## Contract record
 
 - Owner: Repository maintainer.
-- Version: `v1` internal and HTTP contract baseline.
+- Version: `v2` simulated recovery contract; unchanged HTTP paths use a controlled cutover.
 - Status: Accepted for the simulated commerce-to-CRM flow.
 - Compatibility: Additive optional response fields are backward compatible. Removing, renaming, or
   repurposing a field, changing a state meaning, or making an optional field required is breaking.
 - Deprecation: Breaking terms require a documented replacement and controlled cutover before
-  removal. There are no deprecated terms in `v1`.
+  removal. Stage 6 replaces the three-attempt-only baseline through the cutover below.
 
 The requirements below are normative. Example values are illustrative.
 
@@ -34,14 +34,16 @@ create another logical run.
 
 ## Commerce simulator generator
 
-The internal generator accepts only `p1_customer_number` and `p1_revision`, both integers from 1
-through 1,000 inclusive. Unknown fields, coercible strings, and client-provided customer details or
-adapter choices are rejected. This is an additive internal contract, not yet a public HTTP endpoint.
+The generator accepts `p1_customer_number` and `p1_revision`, both integers from 1 through 1,000,
+and optional `p1_scenario`: `success` (default), `rate_limit`, `temporary_outage`,
+`persistent_outage`, or `invalid_destination`. Unknown fields, coercible strings, customer details,
+and adapter choices are rejected. The public event endpoint uses this same contract.
 
 Identical inputs produce identical source events. The external customer ID depends only on the
-customer number; the event idempotency key includes the revision. Email addresses use the reserved
-`example.test` domain. Source time is a logical timestamp: 2026-01-01 UTC plus revision seconds, not
-a claim about an actual commerce-system update. Returned events and customer objects are frozen.
+customer number; the event idempotency key includes the revision and non-default scenario. Default
+success keys are unchanged from Stage 4. Email addresses use the reserved `example.test` domain.
+Source time is a logical timestamp: 2026-01-01 UTC plus revision seconds, not a claim about an
+actual commerce-system update. Returned events and customer objects are frozen.
 
 ## Mapped customer
 
@@ -70,17 +72,20 @@ Synchronization run transitions are:
 ```text
 queued → processing
 processing → succeeded
-processing → retryable_failure → queued
+processing → retryable_failure → processing (only when due)
 processing → terminal_failure
+terminal_failure → queued (one confirmed manual restoration)
+queued/retryable_failure with stopped delivery → queued (one confirmed manual restoration)
 ```
 
-`succeeded` and `terminal_failure` are terminal. A run has at most three processing attempts. A
-third processing attempt cannot enter `retryable_failure`; it must resolve to a terminal state.
-Compare-and-set persistence requires both the expected state and workspace ID, so stale or
-cross-workspace transitions have no effect.
+`succeeded` is immutable. `terminal_failure` stops automatic processing. At most three automatic
+attempts are allowed; attempt three cannot schedule another. One confirmed manual restoration can
+queue one additional attempt, for at most four lifetime attempts. Workspace/run locks and expected
+states prevent stale or cross-workspace mutation. The legacy internal transition helper retains its
+three-attempt automatic-only budget; public recovery uses the transactional recovery repository.
 
 Attempt states are `processing`, `succeeded`, `retryable_failure`, `terminal_failure`, and
-`interrupted`. Attempt numbers are 1–3 and unique within a run.
+`interrupted`. Attempt numbers are 1–4 and unique within a run.
 
 ## Workspace boundary
 
@@ -96,15 +101,15 @@ per invocation.
 
 ## Simulated synchronization HTTP API
 
-These additive `v1` endpoints are owned by the repository maintainer. Every response is JSON with
+These endpoints are owned by the repository maintainer. Every response is JSON with
 `Cache-Control: no-store`. Every endpoint requires the workspace cookie; callers cannot supply a
 workspace ID or adapter authority. The public source is synthetic and the destination is simulated.
 
 - `POST /api/demo/events`: requires the exact configured `Origin` and an `application/json` body
-  containing only the two commerce-generator integers. Raw bodies are limited to 16 KiB and five
-  seconds; unknown fields, malformed JSON, invalid UTF-8, and out-of-range values return
-  `400 INVALID_INPUT`. `p1_fields` is a bounded array drawn only from `p1_customer_number` and
-  `p1_revision`; body-level errors use an empty array. No rejected input is echoed.
+  containing the two commerce-generator integers and optional scenario. Raw bodies are limited to 16
+  KiB and five seconds; unknown fields, malformed JSON, invalid UTF-8, and out-of-range values
+  return `400 INVALID_INPUT`. `p1_fields` is drawn only from `p1_customer_number`, `p1_revision`,
+  and `p1_scenario`; body-level errors use an empty array. No rejected input is echoed.
 - A new event returns `202` with `code: EVENT_ACCEPTED`, `duplicate: false`, `p1_run_id`,
   `p1_source_event_id`, and `p1_correlation_id`. This confirms durable acceptance, not successful
   synchronization. The correlation UUID equals the run UUID. A duplicate returns the same IDs,
@@ -118,11 +123,11 @@ workspace ID or adapter authority. The public source is synthetic and the destin
   events.
 - `GET /api/demo/runs/{run_id}`: requires one valid UUID and no query parameters. Returns IDs,
   correlation ID, state, delivery state, counts/timestamps, safe source type/external ID/source
-  time, the mapped destination effect or null, and at most three ordered attempts. Attempt fields
-  are number, state, safe error code, start time, and completion time. `p1_destination_mode` is
-  always `simulated`. Raw source payloads and cookies are never returned. Missing and
-  other-workspace runs both return `404 RESOURCE_NOT_FOUND` after authentication; unusable cookies
-  return `401` first.
+  time, scenario, safe run error code, manual retry count (0–1), the mapped destination effect or
+  null, and at most four ordered attempts. Attempt fields are number, state, safe error code, start
+  time, and completion time. `p1_destination_mode` is always `simulated`. Raw source payloads and
+  cookies are never returned. Missing and other-workspace runs both return `404 RESOURCE_NOT_FOUND`
+  after authentication; unusable cookies return `401` first.
 
 All new endpoints return `503 DEPENDENCY_UNAVAILABLE` on dependency failure without database or
 provider details. Public source fields cannot invoke real adapters. The destination snapshot is the
@@ -131,7 +136,8 @@ mapped result for this event, not a claim that it is still the customer's latest
 `p1_delivery_state` is pg-boss's `created`, `retry`, `active`, `completed`, `cancelled`, or
 `failed`, or null after queue retention. It is separate from domain state: exhausted infrastructure
 delivery can leave an unprocessed domain run `queued` with delivery state `failed`. This is
-inspectable and never silently reported as success; domain failure/retry actions arrive in Stage 6.
+inspectable and never silently reported as success. One manual restoration is available for a
+failed/cancelled delivery, but missing retained queue evidence alone does not authorize recovery.
 Delivery has at most three executions, a 30-second lease, and two-second retry delays. PostgreSQL
 supervision may reclaim expired leases later than 30 seconds; lease duration is not an end-to-end
 latency promise.
@@ -141,19 +147,20 @@ commit together; pre-commit interruption rolls both back, while post-commit repl
 guarantees apply to the database-backed simulator, not remote provider transactions. See
 [ADR 0002](adr/0002-transactional-simulator-processing.md) for decisions and re-evaluation triggers.
 
-## Operational UI and overview (Stage 5)
+## Operational UI and overview
 
-Owner: repository maintainer. Compatibility: additive `v1` endpoint and UI; no database migration,
-existing error-code change, or persisted-state change. Deprecation: none; the normal `v1` policy
-above applies.
+Owner: repository maintainer. The original Stage 5 endpoint was additive. Stage 6 changes retryable
+failures from attention to pending while delivery remains available and widens attempt counts to
+four. These semantic changes require the controlled cutover below.
 
 `GET /api/demo/overview` requires the existing workspace cookie and accepts no query parameters. It
 returns `200` JSON with `Cache-Control: no-store`:
 
 - `p1_total`, `p1_succeeded`, `p1_pending`, and `p1_attention`: integer counts, 0–1,000, for this
   workspace, read in one database statement. Success takes precedence over queue ACK failures;
-  retryable/terminal domain failures and failed/cancelled deliveries count as attention. Other
-  retained runs count as pending. The three category counts sum to total.
+  terminal domain failures and failed/cancelled deliveries count as attention. Scheduled retryable
+  failures count as pending. Other retained runs count as pending. The three category counts sum to
+  total.
 - `p1_recent`: at most six run summaries, with the same fields as the run-list response, ordered by
   creation time then run UUID descending.
 - `p1_expires_at`: the authorized workspace expiry as an ISO timestamp.
@@ -164,8 +171,8 @@ Errors are the existing `401 WORKSPACE_UNAUTHORIZED`, `400 INVALID_INPUT` for qu
 The public page `/` describes the simulation and opens `/demo`. Workspace creation occurs only on
 explicit action. `/demo/runs` uses the existing 20-row pages; its status filter applies only to the
 current page and is labeled accordingly. `/demo/runs/{run_id}` displays validated safe source
-fields, mapped output, committed attempts, timestamps, and identifiers. `/demo/controls` accepts
-only the existing two generator integers. Native validation precedes the existing server boundary.
+fields, mapped output, committed attempts, timestamps, and identifiers. `/demo/controls` accepts the
+generator integers and scenario. Native validation precedes the server boundary.
 
 Overview and lists are snapshots with manual refresh, not live metrics. Only active details poll: up
 to 30 requests, one at a time, at two-second intervals and for at most 60 seconds per refresh
@@ -175,24 +182,59 @@ and not-found responses clear previously rendered records. Manual refresh starts
 session.
 
 The fresh-workspace control issues a new workspace cookie; it never claims to reset or delete the
-old workspace. Old data follows existing expiry/cleanup. Destructive reset and manual retry controls
-are deferred to Stage 6. The public UI has no real-adapter option or credentials.
+old workspace. Old data follows existing expiry/cleanup. Reset and manual retry are separate,
+explicitly confirmed controls. The public UI has no real-adapter option or credentials.
+
+## Failure, retry, and reset (`v2`)
+
+Owner: repository maintainer. Inputs/outputs are strict and bounded as described here. No fields are
+deprecated; Stage 5 clients must reload at the controlled cutover in
+[ADR 0003](adr/0003-bounded-simulated-recovery.md). Existing success intake, replay identity,
+cookies, and error classes are preserved. New safe conflict codes are additive.
+
+- Automatic retry waits five seconds after attempt one and ten after attempt two. Timestamps are
+  not-before deadlines, not latency guarantees. Failure attempt, run, and next delayed job commit
+  atomically. Rate limit recovers on attempt two, temporary outage on three, persistent outage
+  exhausts, and invalid destination data never retries automatically.
+- Safe attempt causes are `SIMULATED_RATE_LIMIT`, `SIMULATED_OUTAGE`, and
+  `SIMULATED_INVALID_DESTINATION`. Run error adds `RETRY_EXHAUSTED` for the third failed attempt.
+- `POST /api/demo/runs/{run_id}/retry` requires exact origin, workspace cookie, a valid run UUID, no
+  query parameters, and JSON `{ "p1_confirm": true }` only. Accepts one restoration for a terminal
+  run or a queued/retryable run with failed/cancelled delivery. Returns
+  `202 { "code": "RETRY_ACCEPTED" }`. Active, successful, and previously restored runs return
+  `409 RETRY_NOT_ALLOWED`; concurrent duplicates are denied without another job or audit event.
+  Foreign/missing runs return `404 RESOURCE_NOT_FOUND` after authentication.
+- `POST /api/demo/workspaces/reset` requires the same origin/cookie/query/body bounds, with
+  `{ "p1_confirm": true, "p1_request_id": "<UUID>" }`. Cancels current jobs and deletes only owned
+  synthetic source events, runs, attempts, CRM customers, and effects. Preserves session, expiry,
+  and audits. Returns `200 { "code": "WORKSPACE_RESET" }`. Replaying a request UUID is a no-op, even
+  if new events were accepted afterward. Three distinct resets per workspace are allowed; subsequent
+  new requests return `409 RESET_LIMIT_REACHED`.
+- Both endpoints use existing `400`, `401`, `403`, and `503` errors. Rejected inputs never echo
+  request bodies. Mutation outcomes and denials emit safe structured decisions; successful mutations
+  include transactionally committed `retry_requested` or `workspace_reset` audits.
+
+The queue payload stays identifier-only. The current delivery job is tracked separately from the
+stable run/correlation/effect UUID. Each job retains its own three-execution infrastructure bound. A
+manual attempt restores only this run's simulator; it does not reconfigure a real provider.
 
 ## Safe HTTP errors
 
 Errors contain one stable `code` and no stack, SQL, token, raw payload, or provider detail:
 
-| Code                          | Meaning                                            | HTTP status |
-| ----------------------------- | -------------------------------------------------- | ----------- |
-| `INVALID_INPUT`               | Input shape, field, or body is invalid.            | 400         |
-| `WORKSPACE_UNAUTHORIZED`      | Workspace credential is unusable for the resource. | 401         |
-| `ORIGIN_DENIED`               | State-changing request origin is not allowed.      | 403         |
-| `RESOURCE_NOT_FOUND`          | Authorized resource does not exist.                | 404         |
-| `DUPLICATE_EVENT`             | Event resolves to an existing logical run.         | 200         |
-| `EVENT_LIMIT_REACHED`         | Workspace retained-event bound is reached.         | 409         |
-| `WORKSPACE_CAPACITY_EXCEEDED` | Active public workspace bound is reached.          | 503         |
-| `DEPENDENCY_UNAVAILABLE`      | A required dependency is unavailable.              | 503         |
-| `INTERNAL_ERROR`              | Unexpected internal failure.                       | 500         |
+| Code                          | Meaning                                                 | HTTP status |
+| ----------------------------- | ------------------------------------------------------- | ----------- |
+| `INVALID_INPUT`               | Input shape, field, or body is invalid.                 | 400         |
+| `WORKSPACE_UNAUTHORIZED`      | Workspace credential is unusable for the resource.      | 401         |
+| `ORIGIN_DENIED`               | State-changing request origin is not allowed.           | 403         |
+| `RESOURCE_NOT_FOUND`          | Authorized resource does not exist.                     | 404         |
+| `DUPLICATE_EVENT`             | Event resolves to an existing logical run.              | 200         |
+| `RETRY_NOT_ALLOWED`           | Run is active, successful, or manual recovery was used. | 409         |
+| `RESET_LIMIT_REACHED`         | Three distinct workspace resets were used.              | 409         |
+| `EVENT_LIMIT_REACHED`         | Workspace retained-event bound is reached.              | 409         |
+| `WORKSPACE_CAPACITY_EXCEEDED` | Active public workspace bound is reached.               | 503         |
+| `DEPENDENCY_UNAVAILABLE`      | A required dependency is unavailable.                   | 503         |
+| `INTERNAL_ERROR`              | Unexpected internal failure.                            | 500         |
 
 Database and provider errors are logged only as safe error classes. Authorization failures fail
 closed and do not reveal whether a protected resource exists.

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { z } from "zod";
+import { p1_scenario_schema } from "../contracts/recovery.ts";
 
 import {
     parse_p1_source_customer_event,
@@ -10,6 +11,7 @@ export const p1_commerce_simulator_input_schema = z
     .object({
         p1_customer_number: z.number().int().min(1).max(1_000),
         p1_revision: z.number().int().min(1).max(1_000),
+        p1_scenario: p1_scenario_schema.default("success"),
     })
     .strict();
 
@@ -22,6 +24,7 @@ export function create_p1_simulated_customer_event(input: unknown): P1SourceCust
     const source_updated_at = new Date(
         Date.UTC(2026, 0, 1) + options.p1_revision * 1_000,
     ).toISOString();
+    const scenario_suffix = options.p1_scenario === "success" ? "" : `:${options.p1_scenario}`;
     const event = parse_p1_source_customer_event({
         p1_customer: {
             p1_email: `customer-${options.p1_customer_number}@example.test`,
@@ -31,7 +34,7 @@ export function create_p1_simulated_customer_event(input: unknown): P1SourceCust
             p1_updated_at: source_updated_at,
         },
         p1_event_type: "commerce.customer.updated",
-        p1_idempotency_key: `simulated_customer_${options.p1_customer_number}:revision_${options.p1_revision}`,
+        p1_idempotency_key: `simulated_customer_${options.p1_customer_number}:revision_${options.p1_revision}${scenario_suffix}`,
     });
 
     assert.ok(event.p1_customer.p1_email.endsWith("@example.test"));

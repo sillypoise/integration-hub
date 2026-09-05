@@ -99,6 +99,23 @@ resource usage is about USD 2.24 and fits within the USD 5 Hobby charge.
 This short window is initial evidence, not a long-term measurement. Recheck after seven days.
 Exceeding USD 25 in a month triggers a hosting review.
 
+## Stage 6 controlled cutover
+
+After local validation and successful hosted CI, stop the old scenario-unaware application worker
+before enabling new failure jobs. This intentionally creates a brief public-demo maintenance window;
+PostgreSQL, workspace data, and the Railway service configuration remain intact:
+
+```bash
+just deployment-stop stop-current-deployment
+just deploy
+```
+
+Wait for the stopped deployment to finish before deploying. The release migration must succeed
+before the new web/worker starts. Verify automatic retries, exhaustion, manual restoration, scoped
+reset, authorization, and health on the public origin. Reload old browser tabs. After scenario use,
+fix forward rather than deploying Stage 5 code over new jobs. See
+[ADR 0003](adr/0003-bounded-simulated-recovery.md) for compatibility and resource bounds.
+
 ## Deployment evidence
 
 Current Stage 5 deployment `a2a8a78b-314c-4910-920b-c12c2f941e6b` passed release and readiness. The

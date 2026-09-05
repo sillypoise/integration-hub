@@ -5,11 +5,16 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { p1_acceptance_view, p1_workspace_view } from "../../lib/contracts/demo_views";
 import { demo_request, type DemoError } from "./demo_request";
 import { DemoEntry } from "./demo_entry";
+import { RecoveryControl } from "./recovery_control";
 import { ConnectionPanel, ErrorNotice, LoadingPanel, PageHeader } from "./presentation";
 import { use_demo_resource } from "./use_demo_resource";
 
 export function ControlsScreen() {
     const resource = use_demo_resource("/api/demo/workspaces", p1_workspace_view, null);
+    const [form_generation, set_form_generation] = useState(0);
+    function on_reset() {
+        set_form_generation((generation) => generation + 1);
+    }
     return (
         <>
             <PageHeader
@@ -23,7 +28,7 @@ export function ControlsScreen() {
             {resource.data ? (
                 <>
                     <div className="controls-grid">
-                        <EventForm />
+                        <EventForm key={form_generation} />
                         <section className="panel guide-panel">
                             <span className="eyebrow">TRY IT YOURSELF</span>
                             <h2>A small update. The whole journey.</h2>
@@ -57,20 +62,26 @@ export function ControlsScreen() {
                         </section>
                     </div>
                     <ConnectionPanel />
-                    <section className="panel fresh-panel">
-                        <div>
-                            <h2>Start with a clean view</h2>
-                            <p>
-                                A fresh workspace replaces this browser’s session. It does not
-                                delete the old workspace; old data expires automatically after 24
-                                hours.
-                            </p>
-                        </div>
-                        <DemoEntry fresh={true} />
-                    </section>
+                    <RecoveryControl nullable_run_id={null} on_complete={on_reset} />
+                    <ControlsFreshWorkspace />
                 </>
             ) : null}
         </>
+    );
+}
+
+function ControlsFreshWorkspace() {
+    return (
+        <section className="panel fresh-panel">
+            <div>
+                <h2>Start with a clean view</h2>
+                <p>
+                    A fresh workspace replaces this browser’s session. It does not delete the old
+                    workspace; old data expires automatically after 24 hours.
+                </p>
+            </div>
+            <DemoEntry fresh={true} />
+        </section>
     );
 }
 
@@ -112,6 +123,7 @@ function EventForm() {
             body: {
                 p1_customer_number: Number(form.get("customer-number")),
                 p1_revision: Number(form.get("revision")),
+                p1_scenario: form.get("scenario"),
             },
         });
         if (!mounted.current) return;
@@ -134,18 +146,8 @@ function EventForm() {
                     void submit(event);
                 }}
             >
-                <EventNumberField
-                    id="customer-number"
-                    label="Customer number"
-                    hint="A fictional customer from 1 to 1,000."
-                    pending={pending}
-                />
-                <EventNumberField
-                    id="revision"
-                    label="Revision"
-                    hint="1 to 1,000. Same customer + revision = safe replay."
-                    pending={pending}
-                />
+                <EventFormNumbers pending={pending} />
+                <EventFormScenario pending={pending} />
                 <button className="button primary" type="submit" disabled={pending}>
                     {pending ? "Submitting update…" : "Send customer update"}
                 </button>
@@ -153,6 +155,52 @@ function EventForm() {
             {error ? <ErrorNotice error={error} /> : null}
             {accepted ? <EventAcceptedNotice accepted={accepted} /> : null}
         </section>
+    );
+}
+
+function EventFormNumbers({ pending }: Readonly<{ pending: boolean }>) {
+    return (
+        <>
+            <EventNumberField
+                id="customer-number"
+                label="Customer number"
+                hint="A fictional customer from 1 to 1,000."
+                pending={pending}
+            />
+            <EventNumberField
+                id="revision"
+                label="Revision"
+                hint="1 to 1,000. Same customer + revision + scenario = safe replay."
+                pending={pending}
+            />
+        </>
+    );
+}
+
+function EventFormScenario({ pending }: Readonly<{ pending: boolean }>) {
+    return (
+        <div className="form-field">
+            <label htmlFor="scenario">Destination scenario</label>
+            <select
+                id="scenario"
+                name="scenario"
+                defaultValue="success"
+                disabled={pending}
+                aria-describedby="scenario-help"
+            >
+                <option value="success">Success</option>
+                <option value="rate_limit">Rate limit → recovers on attempt 2</option>
+                <option value="temporary_outage">Temporary outage → recovers on attempt 3</option>
+                <option value="persistent_outage">Persistent outage → exhausts 3 attempts</option>
+                <option value="invalid_destination">
+                    Invalid destination data → stops immediately
+                </option>
+            </select>
+            <p id="scenario-help">
+                Deterministic simulation. Retries wait 5 then 10 seconds. Replay identity includes
+                customer, revision, and scenario.
+            </p>
+        </div>
     );
 }
 

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import type { ClientBase } from "pg";
+import { p1_scenario_schema, type P1Scenario } from "../contracts/recovery.ts";
 
 import {
     p1_run_attempt_limit,
@@ -23,12 +24,13 @@ export type P1AcceptSourceEventResult =
 
 export async function accept_p1_source_event(
     input: unknown,
-    options: Readonly<{ current_time: Date; p1_workspace_id: string }>,
+    options: Readonly<{ current_time: Date; p1_workspace_id: string; p1_scenario?: P1Scenario }>,
 ): Promise<P1AcceptSourceEventResult> {
     assert.ok(options.p1_workspace_id.length > 0);
     assert.ok(options.current_time instanceof Date);
 
     const source_event = parse_p1_source_customer_event(input);
+    const p1_scenario = p1_scenario_schema.parse(options.p1_scenario ?? "success");
 
     return with_database_client(async (database_client) => {
         await database_client.query("BEGIN");
@@ -75,7 +77,7 @@ export async function accept_p1_source_event(
             const accepted = await synchronization_repository_insert_event(
                 database_client,
                 source_event,
-                options,
+                { ...options, p1_scenario },
             );
             await database_client.query("COMMIT");
 
@@ -248,7 +250,7 @@ async function synchronization_repository_find_existing_event(
 async function synchronization_repository_insert_event(
     database_client: ClientBase,
     source_event: ReturnType<typeof parse_p1_source_customer_event>,
-    options: Readonly<{ current_time: Date; p1_workspace_id: string }>,
+    options: Readonly<{ current_time: Date; p1_workspace_id: string; p1_scenario: P1Scenario }>,
 ): Promise<Readonly<{ p1_run_id: string; p1_source_event_id: string }>> {
     assert.ok(options.p1_workspace_id.length > 0);
     assert.ok(source_event.p1_idempotency_key.length > 0);
@@ -271,10 +273,11 @@ async function synchronization_repository_insert_event(
                  p1_workspace_id,
                  p1_source_event_id,
                  p1_state,
+                 p1_scenario,
                  p1_created_at,
                  p1_updated_at
              )
-             SELECT $1, p1_id, 'queued', $5, $5
+             SELECT $1, p1_id, 'queued', $6, $5, $5
              FROM p1_event
              RETURNING p1_id, p1_source_event_id
          ), p1_audit AS (
@@ -296,6 +299,7 @@ async function synchronization_repository_insert_event(
             source_event.p1_event_type,
             source_event,
             options.current_time,
+            options.p1_scenario,
         ],
     );
 

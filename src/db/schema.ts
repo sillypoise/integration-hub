@@ -81,6 +81,10 @@ export const p1_synchronization_runs = pgTable(
         p1_source_event_id: uuid("p1_source_event_id").notNull(),
         p1_state: varchar("p1_state", { length: 32 }).notNull(),
         p1_attempt_count: integer("p1_attempt_count").default(0).notNull(),
+        p1_scenario: varchar("p1_scenario", { length: 32 }).default("success").notNull(),
+        p1_manual_retry_count: integer("p1_manual_retry_count").default(0).notNull(),
+        p1_delivery_job_id: uuid("p1_delivery_job_id"),
+        p1_error_code: varchar("p1_error_code", { length: 64 }),
         p1_next_attempt_at: timestamp("p1_next_attempt_at", {
             mode: "date",
             withTimezone: true,
@@ -122,7 +126,16 @@ export const p1_synchronization_runs = pgTable(
         ),
         check(
             "p1_synchronization_runs_p1_attempt_count_check",
-            sql`${table.p1_attempt_count} >= 0 AND ${table.p1_attempt_count} <= 3`,
+            sql`${table.p1_attempt_count} >= 0 AND ${table.p1_attempt_count} <= 3 + ${table.p1_manual_retry_count}`,
+        ),
+        check(
+            "p1_synchronization_runs_p1_manual_retry_check",
+            sql`${table.p1_manual_retry_count} IN (0, 1)`,
+        ),
+        check(
+            "p1_synchronization_runs_p1_scenario_check",
+            sql`${table.p1_scenario} IN ('success', 'rate_limit', 'temporary_outage',
+                'persistent_outage', 'invalid_destination')`,
         ),
     ],
 );
@@ -162,7 +175,7 @@ export const p1_synchronization_attempts = pgTable(
         ),
         check(
             "p1_synchronization_attempts_p1_attempt_number_check",
-            sql`${table.p1_attempt_number} >= 1 AND ${table.p1_attempt_number} <= 3`,
+            sql`${table.p1_attempt_number} >= 1 AND ${table.p1_attempt_number} <= 4`,
         ),
         check(
             "p1_synchronization_attempts_p1_state_check",
@@ -187,11 +200,17 @@ export const p1_audit_events = pgTable(
         p1_action: varchar("p1_action", { length: 64 }).notNull(),
         p1_resource_type: varchar("p1_resource_type", { length: 32 }).notNull(),
         p1_resource_id: uuid("p1_resource_id").notNull(),
+        p1_request_id: uuid("p1_request_id"),
         p1_created_at: timestamp("p1_created_at", { mode: "date", withTimezone: true })
             .defaultNow()
             .notNull(),
     },
     (table) => [
+        uniqueIndex("p1_audit_events_p1_request_unique").on(
+            table.p1_workspace_id,
+            table.p1_action,
+            table.p1_request_id,
+        ),
         index("p1_audit_events_p1_workspace_id_p1_created_at_index").on(
             table.p1_workspace_id,
             table.p1_created_at,

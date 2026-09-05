@@ -142,8 +142,8 @@ A portfolio visitor can understand and operate the successful flow on mobile and
 4. Run detail with source, mapping, attempts, and timeline.
 5. Demo controls for creating safe simulated events and starting a fresh workspace.
 
-A fresh workspace replaces this browser's session; it does not delete old data. Audited destructive
-reset remains in Stage 6, avoiding two overlapping implementations.
+A fresh workspace replaces this browser's session; it does not delete old data. Stage 6 adds a
+separate confirmed, audited reset within the same workspace.
 
 The connection state may be a panel rather than a sixth screen because public providers are
 simulated and cannot be reconfigured.
@@ -165,6 +165,9 @@ simulated and cannot be reconfigured.
 - Empty and loading states are intentional rather than blank or shifting layouts.
 
 ## Stage 6: Failure, retry, and recovery flow
+
+**Status:** Implementation under validation; hosted verification pending. See
+[`stage-06-failure-recovery.md`](stage-reports/stage-06-failure-recovery.md).
 
 ### Outcome
 

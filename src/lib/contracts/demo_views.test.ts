@@ -27,16 +27,16 @@ const run = p1_run_detail_view.parse({
 });
 
 // Terminal domain success takes precedence over delivery ACK failures; only active work is polled.
-it.each(["queued", "processing"] as const)("polls an active %s run", (p1_state) => {
-    expect(p1_detail_is_active({ ...run, p1_state })).toBe(true);
-    expect(p1_run_category({ ...run, p1_state })).toBe("pending");
-});
-it.each(["succeeded", "terminal_failure", "retryable_failure"] as const)(
-    "stops polling domain state %s",
+it.each(["queued", "processing", "retryable_failure"] as const)(
+    "polls an active %s run",
     (p1_state) => {
-        expect(p1_detail_is_active({ ...run, p1_state })).toBe(false);
+        expect(p1_detail_is_active({ ...run, p1_state })).toBe(true);
+        expect(p1_run_category({ ...run, p1_state })).toBe("pending");
     },
 );
+it.each(["succeeded", "terminal_failure"] as const)("stops polling domain state %s", (p1_state) => {
+    expect(p1_detail_is_active({ ...run, p1_state })).toBe(false);
+});
 it.each(["failed", "cancelled"] as const)(
     "marks %s delivery for attention",
     (p1_delivery_state) => {
@@ -58,6 +58,6 @@ it("rejects incompatible modes, invalid dates, excessive attempts, and aggregate
         false,
     );
     expect(p1_run_detail_view.safeParse({ ...run, p1_created_at: "bad" }).success).toBe(false);
-    expect(p1_run_detail_view.safeParse({ ...run, p1_attempt_count: 4 }).success).toBe(false);
+    expect(p1_run_detail_view.safeParse({ ...run, p1_attempt_count: 5 }).success).toBe(false);
     expect(p1_overview_view.safeParse({ p1_total: 1001 }).success).toBe(false);
 });

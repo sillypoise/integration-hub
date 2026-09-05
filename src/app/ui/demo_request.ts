@@ -1,6 +1,13 @@
 import type { z } from "zod";
 
-export type DemoError = "unauthorized" | "not_found" | "invalid" | "limit" | "unavailable";
+export type DemoError =
+    | "unauthorized"
+    | "not_found"
+    | "invalid"
+    | "limit"
+    | "unavailable"
+    | "retry_denied"
+    | "reset_limit";
 export type DemoResult<Value> = { ok: true; data: Value } | { ok: false; error: DemoError };
 
 export async function demo_request<Value>(options: {

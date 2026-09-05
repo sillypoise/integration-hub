@@ -31,7 +31,8 @@ export async function list_p1_synchronization_runs(
                 p1_run.p1_created_at, p1_run.p1_completed_at
              FROM p1_synchronization_runs AS p1_run
              JOIN p1_demo_workspaces AS p1_workspace ON p1_workspace.p1_id = p1_run.p1_workspace_id
-             LEFT JOIN p1_job.job AS p1_job ON p1_job.id = p1_run.p1_id
+             LEFT JOIN p1_job.job AS p1_job
+                 ON p1_job.id = COALESCE(p1_run.p1_delivery_job_id, p1_run.p1_id)
                  AND p1_job.name = 'p1_synchronization'
              WHERE p1_workspace.p1_id = $1 AND p1_workspace.p1_expires_at > clock_timestamp()
              ORDER BY p1_run.p1_created_at DESC, p1_run.p1_id DESC LIMIT 20 OFFSET $2`,
@@ -57,7 +58,8 @@ export async function read_p1_synchronization_detail(
             `SELECT p1_run.p1_id AS p1_run_id, p1_run.p1_id AS p1_correlation_id,
                 p1_run.p1_state, p1_job.state AS p1_delivery_state,
                 p1_run.p1_attempt_count, p1_run.p1_created_at,
-                p1_run.p1_completed_at, p1_run.p1_next_attempt_at,
+                p1_run.p1_completed_at, p1_run.p1_next_attempt_at, p1_run.p1_scenario,
+                p1_run.p1_manual_retry_count, p1_run.p1_error_code,
                 p1_event.p1_id AS p1_source_event_id,
                 jsonb_build_object(
                     'p1_event_type', p1_event.p1_event_type,
@@ -70,12 +72,13 @@ export async function read_p1_synchronization_detail(
                  FROM (SELECT p1_attempt_number, p1_state, p1_error_code,
                      p1_started_at, p1_completed_at FROM p1_synchronization_attempts
                      WHERE p1_run_id = p1_run.p1_id AND p1_workspace_id = $1
-                     ORDER BY p1_attempt_number LIMIT 3) AS p1_attempt) AS p1_attempts
+                     ORDER BY p1_attempt_number LIMIT 4) AS p1_attempt) AS p1_attempts
              FROM p1_synchronization_runs AS p1_run
              JOIN p1_demo_workspaces AS p1_workspace ON p1_workspace.p1_id = p1_run.p1_workspace_id
              JOIN p1_source_events AS p1_event ON p1_event.p1_id = p1_run.p1_source_event_id
                  AND p1_event.p1_workspace_id = p1_run.p1_workspace_id
-             LEFT JOIN p1_job.job AS p1_job ON p1_job.id = p1_run.p1_id
+             LEFT JOIN p1_job.job AS p1_job
+                 ON p1_job.id = COALESCE(p1_run.p1_delivery_job_id, p1_run.p1_id)
                  AND p1_job.name = 'p1_synchronization'
              WHERE p1_workspace.p1_id = $1 AND p1_run.p1_id = $2
                  AND p1_workspace.p1_expires_at > clock_timestamp() LIMIT 1`,

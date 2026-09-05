@@ -55,7 +55,7 @@ it("counts scoped outcomes and returns no more than six recent runs", async () =
         ...(await read_p1_overview(workspace.p1_workspace_id)),
         p1_expires_at: workspace.p1_expires_at.toISOString(),
     });
-    expect(result).toMatchObject({ p1_total: 8, p1_succeeded: 2, p1_pending: 2, p1_attention: 4 });
+    expect(result).toMatchObject({ p1_total: 8, p1_succeeded: 2, p1_pending: 3, p1_attention: 3 });
     expect(result.p1_recent).toHaveLength(6);
     expect(result.p1_recent.map((run) => run.p1_run_id)).toEqual(runs.toReversed().slice(0, 6));
     expect(await read_p1_overview(randomUUID())).toMatchObject({ p1_total: 0, p1_recent: [] });

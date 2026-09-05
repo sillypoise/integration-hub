@@ -174,6 +174,11 @@ validate: format-check lint typecheck test-coverage test-browser
 # Install the browser, validate the app, and smoke-test its production image in CI.
 ci: browser-install-ci validate container-smoke
 
+# Stop only the application deployment for an explicitly confirmed incompatible worker cutover.
+deployment-stop confirmation:
+    @test {{ quote(confirmation) }} = stop-current-deployment
+    railway down --service p1-integration-hub --yes
+
 # Deploy the current checkout to the existing Railway application service.
 deploy:
     railway up --service p1-integration-hub --detach

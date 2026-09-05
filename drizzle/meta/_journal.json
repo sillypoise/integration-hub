@@ -29,6 +29,13 @@
       "when": 1788566424357,
       "tag": "0003_create_crm_simulator",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1788575675143,
+      "tag": "0004_clumsy_sandman",
+      "breakpoints": true
     }
   ]
 }

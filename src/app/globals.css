@@ -809,8 +809,36 @@ select {
     font-weight: 700;
     margin-bottom: 0.45rem;
 }
-.form-field input {
+.form-field input,
+.form-field select {
     width: 100%;
+    min-width: 0;
+}
+.recovery-panel {
+    margin: 1.5rem 0;
+    padding: 1.5rem;
+}
+.recovery-panel > p {
+    max-width: 75ch;
+    margin: 0.75rem 0;
+    font-size: 0.85rem;
+}
+.confirmation {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 44px;
+    margin: 0.75rem 0;
+    font-size: 0.85rem;
+}
+.confirmation input {
+    flex: 0 0 20px;
+    width: 20px;
+    accent-color: var(--accent-dark);
+}
+.recovery-panel output {
+    display: block;
+    margin-top: 1rem;
 }
 .form-field p {
     font-size: 0.72rem;
