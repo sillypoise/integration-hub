@@ -67,6 +67,10 @@ The
 [Stage 5 documentation run](https://github.com/sillypoise/integration-hub/actions/runs/33936391669)
 hit the previous 20-minute limit downloading Ubuntu font packages during Playwright setup, before
 application checks began. The new step limit bounds that failure; it does not fix external mirrors.
+The split workflow passed
+[CI run 33938289867](https://github.com/sillypoise/integration-hub/actions/runs/33938289867) in
+3m29s. That verification also exposed and corrected a virtual-clock test race: the polling test now
+waits for each response to render and checks the exact 30-request / 60-second boundary.
 
 ### Linux watcher capacity
 
