@@ -141,6 +141,43 @@ commit together; pre-commit interruption rolls both back, while post-commit repl
 guarantees apply to the database-backed simulator, not remote provider transactions. See
 [ADR 0002](adr/0002-transactional-simulator-processing.md) for decisions and re-evaluation triggers.
 
+## Operational UI and overview (Stage 5)
+
+Owner: repository maintainer. Compatibility: additive `v1` endpoint and UI; no database migration,
+existing error-code change, or persisted-state change. Deprecation: none; the normal `v1` policy
+above applies.
+
+`GET /api/demo/overview` requires the existing workspace cookie and accepts no query parameters. It
+returns `200` JSON with `Cache-Control: no-store`:
+
+- `p1_total`, `p1_succeeded`, `p1_pending`, and `p1_attention`: integer counts, 0–1,000, for this
+  workspace, read in one database statement. Success takes precedence over queue ACK failures;
+  retryable/terminal domain failures and failed/cancelled deliveries count as attention. Other
+  retained runs count as pending. The three category counts sum to total.
+- `p1_recent`: at most six run summaries, with the same fields as the run-list response, ordered by
+  creation time then run UUID descending.
+- `p1_expires_at`: the authorized workspace expiry as an ISO timestamp.
+
+Errors are the existing `401 WORKSPACE_UNAUTHORIZED`, `400 INVALID_INPUT` for query parameters, and
+`503 DEPENDENCY_UNAVAILABLE` without raw details. Expired workspaces cannot contribute records.
+
+The public page `/` describes the simulation and opens `/demo`. Workspace creation occurs only on
+explicit action. `/demo/runs` uses the existing 20-row pages; its status filter applies only to the
+current page and is labeled accordingly. `/demo/runs/{run_id}` displays validated safe source
+fields, mapped output, committed attempts, timestamps, and identifiers. `/demo/controls` accepts
+only the existing two generator integers. Native validation precedes the existing server boundary.
+
+Overview and lists are snapshots with manual refresh, not live metrics. Only active details poll: up
+to 30 requests, one at a time, at two-second intervals and for at most 60 seconds per refresh
+session. Each HTTP read has a five-second timeout. Polling stops on terminal/stopped/missing
+delivery, errors, or navigation. A paused/failed refresh labels retained data stale. Unauthorized
+and not-found responses clear previously rendered records. Manual refresh starts a new bounded
+session.
+
+The fresh-workspace control issues a new workspace cookie; it never claims to reset or delete the
+old workspace. Old data follows existing expiry/cleanup. Destructive reset and manual retry controls
+are deferred to Stage 6. The public UI has no real-adapter option or credentials.
+
 ## Safe HTTP errors
 
 Errors contain one stable `code` and no stack, SQL, token, raw payload, or provider detail:

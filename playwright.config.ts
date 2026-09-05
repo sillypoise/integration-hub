@@ -25,6 +25,10 @@ export default defineConfig({
             name: "chromium-desktop",
             use: { ...devices["Desktop Chrome"] },
         },
+        {
+            name: "chromium-mobile",
+            use: { ...devices["Pixel 7"] },
+        },
     ],
     webServer: {
         // The custom production entry point starts the worker as well as the HTTP server.

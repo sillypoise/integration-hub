@@ -20,13 +20,14 @@ unverified version numbers here.
 - Package manager: pnpm with a committed lockfile for deterministic installs.
 - Command runner: Just as the single developer and CI entry point for project commands.
 - Web framework: Next.js App Router for visible Next.js evidence in one application.
-- UI: React, Tailwind CSS, and selected shadcn/ui components for polished delivery.
+- UI: React, Tailwind CSS, shared visual tokens, and native accessible controls. Add shadcn/ui only
+  when a current widget needs it.
 - Validation: Zod for untrusted HTTP, form, and adapter data.
 - Forms: Native React and HTML primitives; current forms do not need another library.
 - Server state: Server Components plus narrow polling; no client cache framework yet.
 
-Copied shadcn/ui component source remains application-owned. Components will be added only when a
-current screen needs them.
+Stage 5 needs no additional widget dependency. If shadcn/ui becomes necessary, copied component
+source remains application-owned and must satisfy the same accessibility and validation checks.
 
 ## Data and background work
 

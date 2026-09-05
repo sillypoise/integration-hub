@@ -9,11 +9,20 @@ public demo without pretending to be a general-purpose integration platform.
 
 ## Status
 
-Stages 1 through 4 are complete; Stage 5 is next. The product boundary is documented in
+Stages 1 through 4 are complete; Stage 5 implementation is locally validated, with hosted
+verification pending. The product boundary is documented in
 [`docs/product-brief.md`](docs/product-brief.md), the stack in
 [`docs/tech-stack.md`](docs/tech-stack.md), and the delivery sequence in
 [`docs/implementation-plan.md`](docs/implementation-plan.md). Completed work is summarized in
 [`docs/stage-reports/`](docs/stage-reports/).
+
+## Using the demo
+
+Open the introduction and choose **Enter live demo**. The overview starts empty. Use **Create
+update**, send the default synthetic customer, then **Inspect run** to see its mapping and result.
+Send the same customer and revision again to verify safe replay. No account or provider credentials
+are needed. Both integration endpoints are simulators; the application, queue, and database are
+real.
 
 ## Local development
 

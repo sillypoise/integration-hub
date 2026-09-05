@@ -5,7 +5,9 @@ test.describe("application foundation", () => {
     test("renders the product identity", async ({ page }) => {
         await page.goto("/");
 
-        await expect(page.getByRole("heading", { name: "Integration Hub" })).toBeVisible();
+        await expect(
+            page.getByRole("heading", { name: "Every customer update. Accounted for." }),
+        ).toBeVisible();
         await expect(page).toHaveTitle(/Integration Hub/);
     });
 

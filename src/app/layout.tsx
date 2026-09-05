@@ -15,7 +15,12 @@ type RootLayoutProperties = Readonly<{
 export default function RootLayout({ children }: RootLayoutProperties) {
     return (
         <html lang="en">
-            <body>{children}</body>
+            <body>
+                <a className="skip-link" href="#main">
+                    Skip to content
+                </a>
+                {children}
+            </body>
         </html>
     );
 }

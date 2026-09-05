@@ -126,6 +126,9 @@ One customer update completes through the real application and worker path.
 
 ## Stage 5: Operational user interface
 
+**Status:** Implementation and local validation complete; hosted verification pending. See
+[`stage-05-operational-ui.md`](stage-reports/stage-05-operational-ui.md).
+
 ### Outcome
 
 A portfolio visitor can understand and operate the successful flow on mobile and desktop.
@@ -136,14 +139,18 @@ A portfolio visitor can understand and operate the successful flow on mobile and
 2. Overview with recent status and concise totals.
 3. Synchronization runs with bounded filtering.
 4. Run detail with source, mapping, attempts, and timeline.
-5. Demo controls for creating safe simulated events and resetting the current workspace.
+5. Demo controls for creating safe simulated events and starting a fresh workspace.
+
+A fresh workspace replaces this browser's session; it does not delete old data. Audited destructive
+reset remains in Stage 6, avoiding two overlapping implementations.
 
 The connection state may be a panel rather than a sixth screen because public providers are
 simulated and cannot be reconfigured.
 
 ### Work
 
-- Establish visual tokens and add only the shadcn/ui components required by these screens.
+- Establish visual tokens and native accessible controls. Add shadcn/ui only when a current widget
+  requires behavior not supplied by native controls.
 - Implement responsive navigation and layouts.
 - Add explicit loading, empty, stale, success, and invalid-input states.
 - Poll only active run details and stop polling at a bounded time or terminal state.

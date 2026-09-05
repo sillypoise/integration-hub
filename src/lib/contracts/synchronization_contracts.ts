@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import { z } from "zod";
+import { p1_run_state_schema } from "./run_states.ts";
+export { p1_run_state_schema, p1_attempt_state_schema } from "./run_states.ts";
 
 export const p1_source_payload_max_bytes = 16_384;
 export const p1_workspace_event_limit = 1_000;
@@ -46,22 +48,6 @@ export const p1_synchronization_job_schema = z
         p1_workspace_id: z.uuid(),
     })
     .strict();
-
-export const p1_run_state_schema = z.enum([
-    "queued",
-    "processing",
-    "succeeded",
-    "retryable_failure",
-    "terminal_failure",
-]);
-
-export const p1_attempt_state_schema = z.enum([
-    "processing",
-    "succeeded",
-    "retryable_failure",
-    "terminal_failure",
-    "interrupted",
-]);
 
 export const p1_safe_error_code_schema = z.enum([
     "DEPENDENCY_UNAVAILABLE",
