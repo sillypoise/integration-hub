@@ -53,22 +53,38 @@ test("polling stops at terminal success and on navigation", async ({ page }) => 
 });
 
 test("polling is bounded and stale views can be refreshed manually", async ({ page }) => {
-    await page.clock.install();
+    await page.clock.install({ time: new Date("2026-01-01T00:00:00Z") });
+    await page.clock.pauseAt(new Date("2026-01-01T00:00:01Z"));
     let requests = 0;
     await page.route(`**/api/demo/runs/${run_id}`, async (route) => {
         requests += 1;
-        await route.fulfill({ json: detail });
+        await route.fulfill({
+            json: {
+                ...detail,
+                p1_source: { ...detail.p1_source, p1_external_id: `customer_${requests}` },
+            },
+        });
     });
     await page.goto(`/demo/runs/${run_id}`);
     await expect(page.getByRole("heading", { name: "Your update is on its way" })).toBeVisible();
-    await page.clock.runFor(60_100);
+    // Polls are sequential: advancing timers before rendering can race the network deadline.
+    /* oxlint-disable no-await-in-loop */
+    for (let request_count = 2; request_count <= 30; request_count += 1) {
+        await page.clock.runFor(2_000);
+        await expect(page.getByText(`customer_${request_count}`, { exact: true })).toBeVisible();
+    }
+    /* oxlint-enable no-await-in-loop */
+    await page.clock.runFor(1_999);
+    await expect(page.getByText("Live updates paused", { exact: true })).toHaveCount(0);
+    expect(requests).toBe(30);
+    await page.clock.runFor(1);
     await expect(page.getByText("Live updates paused", { exact: true })).toBeVisible();
     const stopped_count = requests;
-    expect(stopped_count).toBeGreaterThan(1);
-    expect(stopped_count).toBeLessThanOrEqual(30);
+    expect(stopped_count).toBe(30);
     await page.clock.runFor(5_000);
     expect(requests).toBe(stopped_count);
     await page.getByRole("button", { name: "Refresh run" }).click();
+    await expect(page.getByText("customer_31", { exact: true })).toBeVisible();
     await expect(page.getByText("Live updates paused", { exact: true })).toHaveCount(0);
     expect(requests).toBe(stopped_count + 1);
     await page.goto("/");
