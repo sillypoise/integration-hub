@@ -49,9 +49,11 @@ recovery.
 6. A permitted user can inspect a failed attempt and request one bounded retry.
 7. The retry either succeeds or returns to a visible failure state with a stable error class.
 
-The private test environment follows the same internal path but replaces the simulator adapter with
-Stripe test mode as the commerce source and a HubSpot developer test account as the CRM destination.
-This decision and its validation conditions are recorded in [`tech-stack.md`](tech-stack.md).
+The revised maintainer-only test scope uses Stripe test mode as the source and keeps the existing
+simulated CRM destination. The maintainer approved deferring HubSpot rather than adding another
+provider solely to complete the stage. This source-only evidence remains pending and must not be
+presented as a real external CRM integration. The decision and validation conditions are recorded in
+[`tech-stack.md`](tech-stack.md) and [`implementation-plan.md`](implementation-plan.md).
 
 ## 3. Failure and recovery behavior
 

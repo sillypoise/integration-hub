@@ -53,13 +53,16 @@ second replica is introduced; correctness must not depend on having exactly one 
 
 - The public source and destination are deterministic in-process simulators behind explicit adapter
   interfaces.
-- The first real path is Stripe test mode input to a HubSpot developer test account destination.
+- The revised first sandbox path is Stripe test mode input to the existing simulated CRM. HubSpot is
+  deferred with maintainer approval; source-only evidence is not a real CRM integration. Stage 7 is
+  currently blocked on Stripe connectivity, before adapter implementation.
 - Real credentials are available only to a maintainer-run integration test or private environment.
 - Public runtime configuration cannot enable real outbound adapter calls.
 - HTTP contracts use JSON and stable application error codes; raw provider errors remain internal.
 
-Only the two adapters create an interface boundary. We will not build a connector SDK, plugin
-system, field-mapping language, or dynamic code-loading mechanism.
+Keep the maintainer-only Stripe adapter outside the public runtime and reuse existing mapping and
+persistence. Do not introduce a connector SDK, plugin system, field-mapping language, or dynamic
+code-loading mechanism for this single source.
 
 ## Testing and quality
 

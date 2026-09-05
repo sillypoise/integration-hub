@@ -194,16 +194,22 @@ The difficult operational behavior is visible, bounded, and safe to exercise.
 - Concurrent retry requests create at most one new active attempt.
 - Reset cannot affect another workspace or any real external system.
 
-## Stage 7: Real sandbox adapter evidence
+## Stage 7: Stripe source sandbox evidence (revised scope)
+
+**Status:** Blocked before implementation: Stripe API connectivity could not be established from
+this environment. The maintainer approved narrowing this stage to Stripe test mode → simulated CRM;
+the real HubSpot destination is explicitly deferred. See
+[`stage-07-stripe-source.md`](stage-reports/stage-07-stripe-source.md).
 
 ### Outcome
 
-The repository has truthful, reproducible evidence for one real integration path.
+The repository has truthful, reproducible evidence for one real source adapter feeding the existing
+simulated CRM. This does not establish a real commerce-to-external-CRM integration.
 
 ### Work
 
 - Implement a narrow Stripe test-mode source adapter for the fields in the existing contract.
-- Implement a narrow HubSpot developer-test destination adapter.
+- Reuse the existing simulated CRM and transactional synchronization path; defer HubSpot.
 - Validate provider responses before they enter internal state.
 - Map provider errors into the established stable error classes.
 - Add an opt-in integration test requiring maintainer-owned environment secrets.
@@ -212,11 +218,13 @@ The repository has truthful, reproducible evidence for one real integration path
 
 ### Exit gate
 
-- The opt-in test synchronizes one synthetic Stripe customer to HubSpot and verifies the result.
+- The opt-in test reads one synthetic Stripe test customer, synchronizes it to the simulated CRM,
+  and verifies the persisted result.
 - Missing or invalid credentials fail closed without leaking secret or provider internals.
-- Duplicate execution does not create duplicate HubSpot contacts.
+- Duplicate execution does not create duplicate simulated CRM customers or effects.
 - Rate limit, timeout, invalid response, and partial-failure paths are tested or reproduced safely.
-- The public deployment has no route or configuration capable of invoking these adapters.
+- The public deployment has no route, shipped adapter code, or configuration capable of invoking
+  Stripe. No Stripe key is installed in Railway or CI.
 
 If sandbox access proves impractical, stop this stage and label both public endpoints as simulated.
 Do not weaken credential isolation merely to preserve the real-integration claim.
