@@ -101,10 +101,15 @@ Exceeding USD 25 in a month triggers a hosting review.
 
 ## Deployment evidence
 
-Deployment `b00d5c27-5528-4376-a9de-c1f67f15feab` passed its migration and database readiness health
-check at <https://p1-integration-hub-production.up.railway.app>. Hosted inspection confirms four
-applied migrations and a successful simulated CRM effect; project tables remain in `public`, and
-pg-boss internals remain in `p1_job`.
+Current Stage 5 deployment `a2a8a78b-314c-4910-920b-c12c2f941e6b` passed release and readiness. The
+public UI completed the full customer-update flow in both Desktop Chrome and Pixel 7 emulation;
+scoped overview totals and negative HTTP checks passed. See the
+[Stage 5 report](stage-reports/stage-05-operational-ui.md). This release added no migration.
+
+Stage 4 deployment `b00d5c27-5528-4376-a9de-c1f67f15feab` passed its migration and database
+readiness health check at <https://p1-integration-hub-production.up.railway.app>. Hosted inspection
+confirms four applied migrations and a successful simulated CRM effect; project tables remain in
+`public`, and pg-boss internals remain in `p1_job`.
 
 The Stage 4 public API probe accepted a synthetic event, converged duplicate delivery onto the same
 run, and completed one successful attempt and CRM effect with zero delivery retries. Authorization,

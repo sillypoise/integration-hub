@@ -126,7 +126,8 @@ One customer update completes through the real application and worker path.
 
 ## Stage 5: Operational user interface
 
-**Status:** Implementation and local validation complete; hosted verification pending. See
+**Status:** Complete. The five-view UI, bounded polling, accessibility review, local and hosted
+browser flows, CI, and Railway deployment checks passed. See
 [`stage-05-operational-ui.md`](stage-reports/stage-05-operational-ui.md).
 
 ### Outcome

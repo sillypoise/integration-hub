@@ -2,7 +2,8 @@
 
 ## Status
 
-Implementation and local validation complete. Hosted CI and Railway verification are pending.
+Complete. Local validation, hosted CI, Railway deployment, and public desktop/mobile-emulated
+browser flows passed.
 
 ## Delivered
 
@@ -30,6 +31,19 @@ Implementation and local validation complete. Hosted CI and Railway verification
   found no `DATABASE_URL`, `p1_token_hash`, or `postgresql://` strings in emitted static JavaScript.
 - Five-view screenshots are generated under `test-results/` by the operational UI browser test.
   Desktop landing/overview/detail and mobile overview/controls/detail were visually reviewed.
+
+## Hosted verification
+
+- Implementation commit `b1963f9` passed
+  [CI run 33936021821](https://github.com/sillypoise/integration-hub/actions/runs/33936021821),
+  including all 130 tests, 24 browser checks, and the production-container smoke test.
+- Railway deployment `a2a8a78b-314c-4910-920b-c12c2f941e6b` passed the release command and
+  readiness. No new schema migration or infrastructure was required.
+- Real hosted browser flows passed using Desktop Chrome and Pixel 7 emulation. Runs
+  `9b7278f2-845a-4f7d-ab80-34e159e099c8` and `c042257d-6b74-4c6d-8325-f71a2e2d7888` each completed;
+  each isolated overview reported exactly one total/succeeded run and zero pending/attention.
+- Hosted overview responses were non-cacheable, anonymous reads returned `401`, and unexpected query
+  parameters returned `400`. No page-level horizontal overflow occurred in those overview checks.
 
 ## Accessibility review
 
