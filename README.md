@@ -45,6 +45,29 @@ Run `just` to list supported commands. Run the complete local validation with:
 just validate
 ```
 
+### CI and deployment checks
+
+Application changes on `main` and all pull requests run the complete CI suite. Pushes that change
+only `docs/**`, root `README.md`, or root `AGENTS.md` skip it; mixed documentation/code changes
+still run every check. Pull requests deliberately have no path filter, avoiding pending required
+checks. Run `just format-check` locally for documentation edits. Manual CI dispatch remains
+available.
+
+CI invokes the same `just` recipes as `just ci`, with separate steps and timeouts for browser setup,
+formatting, lint, types, database tests, build, browser tests, and container smoke testing. Browser
+setup has a five-minute limit; the whole job retains its 20-minute ceiling. A timeout fails CI
+rather than bypassing a check. `just test-browser-built` requires a current production build;
+normally use `just test-browser`, which builds first.
+
+Wait for successful CI on application changes before deployment. Documentation-only follow-up
+commits need no deployment or another blocking CI wait. Investigate the named step when a run is
+unusually slow rather than repeatedly polling without diagnosis.
+
+The
+[Stage 5 documentation run](https://github.com/sillypoise/integration-hub/actions/runs/33936391669)
+hit the previous 20-minute limit downloading Ubuntu font packages during Playwright setup, before
+application checks began. The new step limit bounds that failure; it does not fix external mirrors.
+
 ### Linux watcher capacity
 
 `just dev` checks that Linux has enough free inotify instances before starting Next.js. If it

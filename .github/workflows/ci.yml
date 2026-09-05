@@ -3,7 +3,14 @@ name: CI
 on:
     push:
         branches: [main]
+        # Keep this list narrow: application/configuration changes must still run CI.
+        paths-ignore:
+            - "docs/**"
+            - "README.md"
+            - "AGENTS.md"
+    # Always report PR checks, including documentation-only PRs, for branch protection.
     pull_request:
+    workflow_dispatch:
 
 permissions:
     contents: read
@@ -35,18 +42,45 @@ jobs:
             SERVER_HOST: 127.0.0.1
         steps:
             - name: Check out repository
+              timeout-minutes: 2
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
             - name: Configure Node.js
+              timeout-minutes: 3
               uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
               with:
                   node-version-file: .nvmrc
             - name: Install pinned pnpm
+              timeout-minutes: 3
               run: npm install --global pnpm@10.33.2
             - name: Configure Just
+              timeout-minutes: 3
               uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
               with:
                   just-version: 1.43.1
             - name: Install dependencies
+              timeout-minutes: 3
               run: just install
-            - name: Validate application
-              run: just ci
+            - name: Install Chromium and OS dependencies
+              timeout-minutes: 5
+              run: just browser-install-ci
+            - name: Check formatting
+              timeout-minutes: 2
+              run: just format-check
+            - name: Lint
+              timeout-minutes: 2
+              run: just lint
+            - name: Typecheck
+              timeout-minutes: 2
+              run: just typecheck
+            - name: Unit and database tests with coverage
+              timeout-minutes: 3
+              run: just test-coverage
+            - name: Build application
+              timeout-minutes: 3
+              run: just build
+            - name: Desktop and mobile browser tests
+              timeout-minutes: 3
+              run: just test-browser-built
+            - name: Build and smoke-test production container
+              timeout-minutes: 6
+              run: just container-smoke

@@ -123,7 +123,10 @@ browser-install-ci:
     pnpm exec playwright install --with-deps chromium
 
 # Build and run browser smoke tests against the production server.
-test-browser: build
+test-browser: build test-browser-built
+
+# Run browser tests against an existing build so CI can time build and tests separately.
+test-browser-built:
     pnpm test:e2e
 
 # Generate a Drizzle migration from the current schema.
