@@ -7,6 +7,13 @@ export default async function setup_test_queues(): Promise<void> {
     await start_job_runtime();
     await stop_job_runtime();
     await clear_test_synchronization_jobs();
+    // Disposable test databases must not inherit a prior suite's daily admission consumption.
+    assert.equal(process.env.NODE_ENV, "test");
+    await with_database_client((client) =>
+        client.query(
+            "UPDATE p1_demo_budgets SET p1_count = 0, p1_window_started_at = clock_timestamp()",
+        ),
+    );
 }
 
 export async function clear_test_synchronization_jobs(): Promise<void> {

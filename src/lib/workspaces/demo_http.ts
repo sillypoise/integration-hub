@@ -25,6 +25,13 @@ export async function authorize_p1_demo_request(request: NextRequest) {
     return workspace;
 }
 
+export function p1_demo_budget_response(): NextResponse {
+    application_logger.warn({}, "Demo daily admission budget denied.");
+    const response = p1_demo_response({ code: "DEMO_BUDGET_REACHED" }, 429);
+    response.headers.set("retry-after", "86400");
+    return response;
+}
+
 export function p1_demo_dependency_error(): NextResponse {
     application_logger.error({}, "Demo request dependency failed.");
     return p1_demo_response({ code: "DEPENDENCY_UNAVAILABLE" }, 503);

@@ -12,7 +12,7 @@ type CreateWorkspace = (options: Readonly<{ current_time: Date }>) => Promise<
           p1_token: string;
           p1_workspace_id: string;
       }>
-    | Readonly<{ ok: false; code: "WORKSPACE_CAPACITY_EXCEEDED" }>
+    | Readonly<{ ok: false; code: "WORKSPACE_CAPACITY_EXCEEDED" | "DEMO_BUDGET_REACHED" }>
 >;
 
 const mocks = vi.hoisted(() => ({
@@ -103,6 +103,21 @@ describe("POST /api/demo/workspaces", () => {
             expect(mocks.create_p1_demo_workspace).not.toHaveBeenCalled();
         },
     );
+});
+
+// Admission rejection must not accidentally grant browser workspace authority.
+it("returns a daily-budget response without issuing a cookie", async () => {
+    set_valid_environment();
+    mocks.create_p1_demo_workspace.mockResolvedValue({ ok: false, code: "DEMO_BUDGET_REACHED" });
+    const response = await POST(
+        new NextRequest(`${application_origin}/api/demo/workspaces`, {
+            method: "POST",
+            headers: { origin: application_origin },
+        }),
+    );
+    expect(response.status).toBe(429);
+    expect(response.headers.get("set-cookie")).toBeNull();
+    expect(response.headers.get("retry-after")).toBe("86400");
 });
 
 describe("GET /api/demo/workspaces", () => {

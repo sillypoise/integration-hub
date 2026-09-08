@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import type { ReactNode } from "react";
 
 import "./globals.css";
@@ -12,7 +13,9 @@ type RootLayoutProperties = Readonly<{
     children: ReactNode;
 }>;
 
-export default function RootLayout({ children }: RootLayoutProperties) {
+export default async function RootLayout({ children }: RootLayoutProperties) {
+    // A fresh CSP nonce must accompany framework scripts; build-time HTML cannot supply one.
+    await connection();
     return (
         <html lang="en">
             <body>

@@ -51,6 +51,8 @@ export const p1_synchronization_job_schema = z
 
 export const p1_safe_error_code_schema = z.enum([
     "DEPENDENCY_UNAVAILABLE",
+    "DEMO_BUDGET_REACHED",
+    "REQUEST_LIMIT_REACHED",
     "DUPLICATE_EVENT",
     "EVENT_LIMIT_REACHED",
     "INTERNAL_ERROR",

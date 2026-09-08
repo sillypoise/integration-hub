@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import type { ClientBase } from "pg";
+import { consume_p1_demo_budget } from "./demo_budget.ts";
 
 import { with_database_client } from "../database/database_client.ts";
 import {
@@ -25,7 +26,7 @@ export type P1WorkspaceCreationResult =
           p1_token: string;
           p1_workspace_id: string;
       }>
-    | Readonly<{ ok: false; code: "WORKSPACE_CAPACITY_EXCEEDED" }>;
+    | Readonly<{ ok: false; code: "WORKSPACE_CAPACITY_EXCEEDED" | "DEMO_BUDGET_REACHED" }>;
 
 export async function create_p1_demo_workspace(
     options: Readonly<{ current_time: Date }>,
@@ -61,6 +62,10 @@ export async function create_p1_demo_workspace(
                 return Object.freeze({ ok: false as const, code: "WORKSPACE_CAPACITY_EXCEEDED" });
             }
 
+            if (!(await consume_p1_demo_budget(database_client, "workspaces"))) {
+                await database_client.query("ROLLBACK");
+                return Object.freeze({ ok: false as const, code: "DEMO_BUDGET_REACHED" });
+            }
             const workspace = await workspace_repository_insert_workspace(database_client, {
                 created_at: options.current_time,
                 expires_at,

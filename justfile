@@ -98,6 +98,27 @@ format-check:
 lint:
     pnpm lint
 
+# Audit locked production and development dependencies; fail on any advisory.
+dependency-audit:
+    timeout 120s pnpm audit --audit-level low
+
+# Install the pinned vulnerability scanner from its upstream release, verifying the archive.
+security-tools:
+    mkdir -p .tools
+    gh release download v0.74.0 --repo aquasecurity/trivy --pattern trivy_0.74.0_Linux-64bit.tar.gz --dir .tools --clobber
+    printf '%s\n' '2ae6fe3ee734b7fdf11335663e18c75ea12dccc76062f09f164a3b0f8be4371a  .tools/trivy_0.74.0_Linux-64bit.tar.gz' | sha256sum --check
+    tar --extract --gzip --file .tools/trivy_0.74.0_Linux-64bit.tar.gz --directory .tools trivy
+
+# Scan the actual production image; retain a full report and deny high/critical findings.
+container-audit: security-tools
+    podman save --format oci-archive --output .tools/integration-hub.tar integration-hub:local
+    .tools/trivy image --input .tools/integration-hub.tar --scanners vuln --timeout 5m --format json --output .tools/container-audit.json
+    .tools/trivy image --input .tools/integration-hub.tar --scanners vuln --timeout 5m --severity HIGH,CRITICAL --exit-code 1
+
+# Inspect an existing production build for server-only markers and public source maps.
+bundle-audit:
+    node src/scripts/check_public_bundle.ts
+
 # Generate Next.js route types and run the TypeScript compiler.
 typecheck:
     pnpm typecheck
@@ -160,6 +181,12 @@ database-start:
     timeout 45s podman wait --condition healthy {{postgres_container}} >/dev/null
     podman healthcheck run {{postgres_container}} >/dev/null
 
+# Run a bounded outage/recovery drill against the existing build and disposable project database.
+outage-check confirmation:
+    @test {{ quote(confirmation) }} = pause-local-database
+    @trap 'podman unpause {{postgres_container}} >/dev/null 2>&1 || true' EXIT; \
+        NODE_ENV=production timeout 150s node src/scripts/check_local_outage.ts
+
 # Stop local PostgreSQL with a bounded grace period.
 database-stop:
     podman stop --time 10 {{postgres_container}} >/dev/null
@@ -169,10 +196,10 @@ database-status:
     podman ps --all --filter name={{postgres_container}}
 
 # Run all checks required before a commit or CI completion.
-validate: format-check lint typecheck test-coverage test-browser
+validate: format-check lint typecheck test-coverage test-browser bundle-audit dependency-audit
 
 # Install the browser, validate the app, and smoke-test its production image in CI.
-ci: browser-install-ci validate container-smoke
+ci: browser-install-ci validate container-smoke container-audit
 
 # Stop only the application deployment for an explicitly confirmed incompatible worker cutover.
 deployment-stop confirmation:

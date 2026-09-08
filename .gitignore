@@ -10,6 +10,9 @@
 !.yarn/releases
 !.yarn/versions
 
+# Downloaded scanners and image audit artifacts (never build inputs).
+/.tools/
+
 # testing
 /coverage
 /playwright-report

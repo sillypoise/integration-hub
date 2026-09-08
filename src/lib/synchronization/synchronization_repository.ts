@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import type { ClientBase } from "pg";
+import { consume_p1_demo_budget } from "../workspaces/demo_budget.ts";
 import { p1_scenario_schema, type P1Scenario } from "../contracts/recovery.ts";
 
 import {
@@ -20,7 +21,10 @@ export type P1AcceptedSourceEvent = Readonly<{
 
 export type P1AcceptSourceEventResult =
     | Readonly<{ ok: true; value: P1AcceptedSourceEvent }>
-    | Readonly<{ ok: false; code: "EVENT_LIMIT_REACHED" | "WORKSPACE_UNAUTHORIZED" }>;
+    | Readonly<{
+          ok: false;
+          code: "EVENT_LIMIT_REACHED" | "WORKSPACE_UNAUTHORIZED" | "DEMO_BUDGET_REACHED";
+      }>;
 
 export async function accept_p1_source_event(
     input: unknown,
@@ -36,16 +40,11 @@ export async function accept_p1_source_event(
         await database_client.query("BEGIN");
 
         try {
-            const workspace_result = await database_client.query(
-                `SELECT p1_id
-                 FROM p1_demo_workspaces
-                 WHERE p1_id = $1
-                   AND p1_expires_at > $2
-                 FOR UPDATE`,
-                [options.p1_workspace_id, options.current_time],
+            const workspace_active = await accept_p1_source_event_lock_workspace(
+                database_client,
+                options,
             );
-
-            if (workspace_result.rowCount !== 1) {
+            if (!workspace_active) {
                 await database_client.query("ROLLBACK");
                 return Object.freeze({ ok: false as const, code: "WORKSPACE_UNAUTHORIZED" });
             }
@@ -74,6 +73,10 @@ export async function accept_p1_source_event(
                 return Object.freeze({ ok: false as const, code: "EVENT_LIMIT_REACHED" });
             }
 
+            if (!(await consume_p1_demo_budget(database_client, "events"))) {
+                await database_client.query("ROLLBACK");
+                return Object.freeze({ ok: false as const, code: "DEMO_BUDGET_REACHED" });
+            }
             const accepted = await synchronization_repository_insert_event(
                 database_client,
                 source_event,
@@ -90,6 +93,19 @@ export async function accept_p1_source_event(
             throw error;
         }
     });
+}
+
+async function accept_p1_source_event_lock_workspace(
+    database_client: ClientBase,
+    options: Readonly<{ p1_workspace_id: string; current_time: Date }>,
+): Promise<boolean> {
+    const result = await database_client.query(
+        `SELECT p1_id FROM p1_demo_workspaces
+         WHERE p1_id = $1 AND p1_expires_at > $2 FOR UPDATE`,
+        [options.p1_workspace_id, options.current_time],
+    );
+    assert.ok(result.rowCount === 0 || result.rowCount === 1);
+    return result.rowCount === 1;
 }
 
 export async function transition_p1_synchronization_run(
@@ -206,9 +222,11 @@ async function accept_p1_source_event_count_events(
     assert.ok(p1_workspace_event_limit > 0);
 
     const result = await database_client.query<{ p1_event_count: string }>(
-        `SELECT count(*) AS p1_event_count
-         FROM p1_source_events
-         WHERE p1_workspace_id = $1`,
+        `SELECT GREATEST(
+            (SELECT count(*) FROM p1_source_events WHERE p1_workspace_id = $1),
+            (SELECT count(*) FROM (SELECT p1_id FROM p1_audit_events
+                WHERE p1_workspace_id = $1 AND p1_action = 'event_accepted' LIMIT 1000) AS p1_accepted)
+         ) AS p1_event_count`,
         [p1_workspace_id],
     );
     const event_count = Number(result.rows[0]?.p1_event_count);

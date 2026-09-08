@@ -31,16 +31,14 @@ export async function check_database_readiness(): Promise<boolean> {
         assert.equal(result.rowCount, 1);
         assert.equal(result.rows[0]?.p1_ready, 1);
         database_ready = true;
-    } catch (error: unknown) {
-        const error_type = error instanceof Error ? error.name : "UnknownError";
-        application_logger.error({ error_type }, "Readiness database check failed.");
+    } catch {
+        application_logger.error({}, "Readiness database check failed.");
     }
 
     try {
         await database_client.end();
-    } catch (error: unknown) {
-        const error_type = error instanceof Error ? error.name : "UnknownError";
-        application_logger.error({ error_type }, "Readiness database cleanup failed.");
+    } catch {
+        application_logger.error({}, "Readiness database cleanup failed.");
         database_ready = false;
     }
 

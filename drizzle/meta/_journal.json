@@ -36,6 +36,13 @@
       "when": 1788575675143,
       "tag": "0004_clumsy_sandman",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1788635624925,
+      "tag": "0005_puzzling_blizzard",
+      "breakpoints": true
     }
   ]
 }

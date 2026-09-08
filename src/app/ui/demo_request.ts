@@ -7,7 +7,9 @@ export type DemoError =
     | "limit"
     | "unavailable"
     | "retry_denied"
-    | "reset_limit";
+    | "reset_limit"
+    | "throttled"
+    | "budget";
 export type DemoResult<Value> = { ok: true; data: Value } | { ok: false; error: DemoError };
 
 export async function demo_request<Value>(options: {
@@ -32,6 +34,12 @@ export async function demo_request<Value>(options: {
         if (response.status === 401) return { ok: false, error: "unauthorized" };
         if (response.status === 404) return { ok: false, error: "not_found" };
         if (response.status === 400) return { ok: false, error: "invalid" };
+        if (response.status === 429) {
+            return {
+                ok: false,
+                error: response.headers.get("retry-after") === "86400" ? "budget" : "throttled",
+            };
+        }
         if (response.status === 409) return { ok: false, error: "limit" };
         if (!response.ok) return { ok: false, error: "unavailable" };
         const parsed = options.schema.safeParse(await response.json());

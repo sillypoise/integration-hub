@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
-import { createServer, type Server } from "node:http";
+import { createServer, type Server, type ServerResponse } from "node:http";
 import next from "next";
 
 import { read_server_environment } from "../lib/config/server_environment.ts";
 import { start_job_runtime, stop_job_runtime } from "../lib/jobs/job_runtime.ts";
 import { application_logger } from "../lib/observability/application_logger.ts";
+import { create_p1_http_guard } from "../lib/security/http_guard.ts";
 
 export async function run_application_server(): Promise<void> {
     const environment = read_server_environment(process.env);
@@ -25,23 +26,31 @@ export async function run_application_server(): Promise<void> {
     await start_job_runtime();
 
     const request_handler = application.getRequestHandler();
-    const server = createServer((request, response) => {
-        request_handler(request, response).catch((error: unknown) => {
-            const error_type = error instanceof Error ? error.name : "UnknownError";
-            application_logger.error({ error_type }, "HTTP request handling failed.");
-
-            if (response.headersSent) {
-                response.end(JSON.stringify({ code: "INTERNAL_ERROR" }));
-                return;
-            }
-
-            response.writeHead(500, {
-                "cache-control": "no-store",
-                "content-type": "application/json; charset=utf-8",
-            });
-            response.end(JSON.stringify({ code: "INTERNAL_ERROR" }));
-        });
-    });
+    const guard = create_p1_http_guard(
+        {
+            production: !development_mode,
+            https: environment.APPLICATION_ORIGIN.startsWith("https://"),
+        },
+        () => performance.now(),
+    );
+    const server = createServer(
+        {
+            headersTimeout: 5_000,
+            requestTimeout: 10_000,
+            keepAliveTimeout: 5_000,
+            connectionsCheckingInterval: 1_000,
+            maxHeaderSize: 8_192,
+        },
+        (request, response) => {
+            const release = guard(request, response);
+            if (release === null) return;
+            request_handler(request, response)
+                .catch(() => application_server_respond_error(response))
+                .finally(release);
+        },
+    );
+    server.maxConnections = 128;
+    server.maxRequestsPerSocket = 100;
 
     const shutdown = application_server_create_shutdown(
         server,
@@ -60,6 +69,19 @@ export async function run_application_server(): Promise<void> {
         { host: environment.SERVER_HOST, port: environment.PORT },
         "Application server started.",
     );
+}
+
+function application_server_respond_error(response: ServerResponse): void {
+    application_logger.error({}, "HTTP request handling failed.");
+    if (response.headersSent) {
+        response.end(JSON.stringify({ code: "INTERNAL_ERROR" }));
+        return;
+    }
+    response.writeHead(500, {
+        "cache-control": "no-store",
+        "content-type": "application/json; charset=utf-8",
+    });
+    response.end(JSON.stringify({ code: "INTERNAL_ERROR" }));
 }
 
 function application_server_create_shutdown(
@@ -93,9 +115,8 @@ function application_server_request_shutdown(
     assert.ok(signal.length > 0);
     assert.ok(signal.length <= 15);
 
-    shutdown(signal).catch((error: unknown) => {
-        const error_type = error instanceof Error ? error.name : "UnknownError";
-        application_logger.fatal({ error_type, signal }, "Application shutdown failed.");
+    shutdown(signal).catch(() => {
+        application_logger.fatal({ signal }, "Application shutdown failed.");
         process.exitCode = 1;
     });
 }

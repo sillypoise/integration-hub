@@ -196,9 +196,9 @@ The difficult operational behavior is visible, bounded, and safe to exercise.
 
 ## Stage 7: Stripe source sandbox evidence (revised scope)
 
-**Status:** Blocked before implementation: Stripe API connectivity could not be established from
-this environment. The maintainer approved narrowing this stage to Stripe test mode → simulated CRM;
-the real HubSpot destination is explicitly deferred. See
+**Status:** Connectivity and read-only test-key authentication now verified; implementation pending.
+The maintainer approved narrowing this stage to Stripe test mode → simulated CRM; the real HubSpot
+destination is explicitly deferred. See
 [`stage-07-stripe-source.md`](stage-reports/stage-07-stripe-source.md).
 
 ### Outcome
@@ -230,6 +230,11 @@ If sandbox access proves impractical, stop this stage and label both public endp
 Do not weaken credential isolation merely to preserve the real-integration claim.
 
 ## Stage 8: Public-demo hardening
+
+**Status:** Implementation and local validation complete; hosted CI, image review, and deployment
+checks pending. Stage 8 proceeds independently with maintainer approval; Stage 7 implementation
+remains pending despite restored Stripe access. See
+[`stage-08-public-hardening.md`](stage-reports/stage-08-public-hardening.md).
 
 ### Outcome
 
@@ -282,7 +287,8 @@ A deployed, documented, and truthfully presented portfolio project.
 
 ## Stage dependencies
 
-Stages are intentionally sequential:
+Stages normally follow this sequence. The maintainer approved proceeding with Stage 8 while Stripe
+access was blocked; public simulator security does not depend on Stripe access:
 
 ```text
 foundation

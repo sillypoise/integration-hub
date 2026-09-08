@@ -1,3 +1,7 @@
+# Drizzle's legacy loader otherwise retains vulnerable esbuild 0.18; review at Stage 9.
+overrides:
+    "@esbuild-kit/core-utils>esbuild": "0.25.12"
+
 onlyBuiltDependencies:
     - esbuild
     - sharp

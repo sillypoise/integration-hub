@@ -10,6 +10,7 @@ import {
 import { accept_p1_source_event } from "../../../../lib/synchronization/synchronization_repository.ts";
 import {
     authorize_p1_demo_request,
+    p1_demo_budget_response,
     p1_demo_response,
     p1_demo_dependency_error,
 } from "../../../../lib/workspaces/demo_http.ts";
@@ -42,6 +43,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             },
         );
         if (!accepted.ok) {
+            if (accepted.code === "DEMO_BUDGET_REACHED") return p1_demo_budget_response();
             return p1_demo_response(
                 { code: accepted.code },
                 accepted.code === "WORKSPACE_UNAUTHORIZED" ? 401 : 409,

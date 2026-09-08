@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import { p1_demo_budget_response } from "../../../../lib/workspaces/demo_http.ts";
 
 import { read_server_environment } from "../../../../lib/config/server_environment.ts";
 import { application_logger } from "../../../../lib/observability/application_logger.ts";
@@ -24,6 +25,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         });
 
         if (workspace === null) {
+            application_logger.warn({}, "Workspace authorization denied.");
             return NextResponse.json(
                 { code: "WORKSPACE_UNAUTHORIZED" },
                 { headers: response_headers, status: 401 },
@@ -37,8 +39,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
             },
             { headers: response_headers, status: 200 },
         );
-    } catch (error: unknown) {
-        return workspace_route_internal_error(error);
+    } catch {
+        return workspace_route_internal_error();
     }
 }
 
@@ -50,6 +52,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     assert.ok(request.url.length > 0);
 
     if (request_origin !== environment.APPLICATION_ORIGIN) {
+        application_logger.warn({}, "Workspace creation origin denied.");
         return NextResponse.json(
             { code: "ORIGIN_DENIED" },
             { headers: response_headers, status: 403 },
@@ -72,6 +75,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         const result = await create_p1_demo_workspace({ current_time: new Date() });
 
         if (!result.ok) {
+            if (result.code === "DEMO_BUDGET_REACHED") return p1_demo_budget_response();
             return NextResponse.json(
                 { code: result.code },
                 { headers: response_headers, status: 503 },
@@ -102,8 +106,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         });
 
         return response;
-    } catch (error: unknown) {
-        return workspace_route_internal_error(error);
+    } catch {
+        return workspace_route_internal_error();
     }
 }
 
@@ -114,13 +118,9 @@ function workspace_route_invalid_input(): NextResponse {
     return NextResponse.json({ code: "INVALID_INPUT" }, { headers: response_headers, status: 400 });
 }
 
-function workspace_route_internal_error(error: unknown): NextResponse {
-    const error_type = error instanceof Error ? error.name : "UnknownError";
-
-    assert.ok(error_type.length > 0);
-    assert.ok(error_type.length <= 100);
-
-    application_logger.error({ error_type }, "Workspace request failed.");
+function workspace_route_internal_error(): NextResponse {
+    // Even Error.name can be supplied by a dependency; no arbitrary diagnostic text is safe.
+    application_logger.error({}, "Workspace request failed.");
     return NextResponse.json(
         { code: "INTERNAL_ERROR" },
         { headers: response_headers, status: 500 },

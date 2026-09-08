@@ -77,6 +77,17 @@ it.each([
     expect(repository.accept_p1_source_event).not.toHaveBeenCalled();
 });
 
+it("returns an explicit daily-budget denial without accepting an event", async () => {
+    vi.mocked(repository.accept_p1_source_event).mockResolvedValue({
+        ok: false,
+        code: "DEMO_BUDGET_REACHED",
+    });
+    const response = await POST(event_request('{"p1_customer_number":1,"p1_revision":1}'));
+    expect(response.status).toBe(429);
+    expect(response.headers.get("retry-after")).toBe("86400");
+    expect(await response.json()).toEqual({ code: "DEMO_BUDGET_REACHED" });
+});
+
 it("returns bounded field names for invalid numeric inputs", async () => {
     const response = await POST(event_request('{"p1_customer_number":0,"p1_revision":1001}'));
     expect(await response.json()).toEqual({

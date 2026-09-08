@@ -10,8 +10,9 @@ public demo without pretending to be a general-purpose integration platform.
 ## Status
 
 Stages 1 through 6 are complete. Stage 7 is narrowed to a maintainer-only Stripe test source with
-simulated CRM; HubSpot is deferred. Stripe connectivity currently blocks Stage 7 before
-implementation. No real-adapter completion is claimed. See the
+simulated CRM; HubSpot is deferred. Stripe connectivity and read-only authentication now work;
+implementation remains pending. Stage 8 hardening passes local checks, with hosted release checks
+pending. No real-adapter completion is claimed. See the
 [Stage 7 report](docs/stage-reports/stage-07-stripe-source.md). The product boundary is documented
 in [`docs/product-brief.md`](docs/product-brief.md), the stack in
 [`docs/tech-stack.md`](docs/tech-stack.md), and the delivery sequence in
@@ -32,6 +33,17 @@ and ten-second waits. Invalid destination data stops immediately. Failed runs of
 **Restore simulator & retry** action, preserving their history. **Reset synthetic records** deletes
 only your workspace's synthetic records, keeps audit history, and allows three resets; starting a
 fresh workspace is a separate action.
+
+## Public-demo safeguards
+
+Request/concurrency caps and durable daily admission budgets bound the shared demo. Reset does not
+replenish the 1,000-event lifetime workspace limit. Nonced scripts, scoped cookies, and security
+headers protect browser boundaries; real-adapter credentials remain outside the public deployment.
+See [security limits and tradeoffs](docs/security.md). Shared quotas are not DDoS protection.
+
+`just validate` includes dependency and public-bundle checks. `just container-audit` scans an
+already-built production image; CI retains its report. `just outage-check pause-local-database`
+performs an explicitly confirmed drill against the disposable local database and an existing build.
 
 ## Local development
 

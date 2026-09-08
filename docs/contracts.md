@@ -27,7 +27,8 @@ The server accepts one strict JSON object only after workspace authorization:
 | `p1_customer.p1_updated_at`  | ISO 8601 timestamp with an explicit offset.                              |
 
 Unknown fields are rejected. The serialized UTF-8 payload is limited to 16 KiB. Validation occurs
-before persistence. A workspace can own at most 1,000 retained source events.
+before persistence. A workspace can accept at most 1,000 source events over its lifetime, including
+events subsequently deleted by reset. At most 1,000 are retained.
 
 A repeated idempotency key returns the existing source event and synchronization run. It must not
 create another logical run.
@@ -218,6 +219,32 @@ The queue payload stays identifier-only. The current delivery job is tracked sep
 stable run/correlation/effect UUID. Each job retains its own three-execution infrastructure bound. A
 manual attempt restores only this run's simulator; it does not reconfigure a real provider.
 
+## Stage 8 admission and browser-security delta
+
+Owner: repository maintainer. [Security contract](security.md) defines the exact fixed-window,
+concurrency, connection, and deadline limits. Two durable global budgets permit 200 successful
+workspace creations and 2,000 accepted new events per 24-hour window. Lifetime per-workspace event
+admission uses preserved acceptance audits; reset no longer replenishes the event allowance.
+Retained duplicate events remain replayable at the event quota and consume no extra admission.
+
+Compatibility: existing payloads, cookies, run/attempt states, and successful-response schemas are
+unchanged. New policy failures are `429 REQUEST_LIMIT_REACHED` (`Retry-After: 60`) and
+`429 DEMO_BUDGET_REACHED` (`Retry-After: 86400`). Handler-capacity rejection uses the existing safe
+`503 DEPENDENCY_UNAVAILABLE`. The outer HTTP guard may reject before authorization/origin checks; it
+reveals no protected record information. Excessive URLs get `414 INVALID_INPUT`; Node rejects
+excessive headers with its own `431` response before application headers/JSON are available.
+
+The lifetime event semantics and early rejection precedence are intentional contract changes. Old
+intake processes must stop at the Stage 8 cutover to avoid quota bypass. The schema is additive, but
+application rollback to quota-unaware intake is not supported after activation. Fix forward. No
+body-field or state migration is required. Old browser tabs may show a generic unavailable message
+for new quota errors; reload for the dedicated messages.
+
+Pages now render per request for fresh nonces; production script CSP forbids arbitrary inline/eval
+execution. Frame/referrer/permission/resource headers and HTTPS HSTS apply to normal application
+responses, including guarded errors. Public source maps and unused image optimization are disabled.
+No real adapter or credentials are admitted. See `docs/security.md` for limitations and evidence.
+
 ## Safe HTTP errors
 
 Errors contain one stable `code` and no stack, SQL, token, raw payload, or provider detail:
@@ -231,7 +258,9 @@ Errors contain one stable `code` and no stack, SQL, token, raw payload, or provi
 | `DUPLICATE_EVENT`             | Event resolves to an existing logical run.              | 200         |
 | `RETRY_NOT_ALLOWED`           | Run is active, successful, or manual recovery was used. | 409         |
 | `RESET_LIMIT_REACHED`         | Three distinct workspace resets were used.              | 409         |
-| `EVENT_LIMIT_REACHED`         | Workspace retained-event bound is reached.              | 409         |
+| `REQUEST_LIMIT_REACHED`       | Shared HTTP request budget exhausted.                   | 429         |
+| `DEMO_BUDGET_REACHED`         | Durable daily creation/intake budget exhausted.         | 429         |
+| `EVENT_LIMIT_REACHED`         | Workspace lifetime event bound is reached.              | 409         |
 | `WORKSPACE_CAPACITY_EXCEEDED` | Active public workspace bound is reached.               | 503         |
 | `DEPENDENCY_UNAVAILABLE`      | A required dependency is unavailable.                   | 503         |
 | `INTERNAL_ERROR`              | Unexpected internal failure.                            | 500         |

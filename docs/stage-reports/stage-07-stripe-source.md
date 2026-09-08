@@ -2,8 +2,10 @@
 
 ## Status
 
-Blocked before implementation. No adapter or real sandbox synchronization has been delivered. Stages
-1–6 remain complete. The public source and destination remain explicitly simulated.
+Connectivity and read-only test-key authentication now verified (HTTP 200 on a subsequent bounded
+check of `/v1/customers?limit=1`). No response payload was printed or changed. Adapter
+implementation and real sandbox synchronization remain pending. Stages 1–6 remain complete. The
+public source and destination remain explicitly simulated.
 
 ## Approved scope revision
 
@@ -19,15 +21,16 @@ Admission decision (`SIMPLE-ADMIT-002/003`): reuse the existing mapping, queue, 
 Do not add another service, provider account, or generic adapter framework. A real destination can
 be reconsidered only when the maintainer has sandbox access and a current evidence requirement.
 
-## Observed blocker
+## Initial observed blocker (subsequently cleared)
 
 - Unauthenticated HTTPS requests to Stripe's API and documentation site timed out. Explicit IPv4
   attempts to both endpoints also timed out after ten seconds, with no HTTP response (`000`).
 - A read-only `GET https://api.stripe.com/v1/customers?limit=1`, using the locally configured
   test-mode key, redirect denial, and an eight-second deadline, failed to connect or timed out. The
   check did not print credentials or customer data. No response body was inspected.
-- Authentication remains **unverified**, not rejected. The cause of the connectivity failure is
-  unknown; these checks do not establish a Stripe outage or invalid credentials.
+- Authentication was **unverified**, not rejected, during these initial attempts. The cause of the
+  connectivity failure is unknown; these checks do not establish a Stripe outage or invalid
+  credentials.
 - No Stripe write/delete request was issued, no remote object was created by this attempt, and no
   key was copied to Railway, CI, documentation, or source control.
 
@@ -38,11 +41,10 @@ deployment to work around the blocker (`SECCORE-SECR-003`).
 
 ## Resumption
 
-Owner: repository maintainer. Recheck the same bounded, read-only authentication request from the
-intended maintainer environment when Stripe connectivity is available. Proceed only after a
-successful response. Then implement and validate the revised source-only flow and record actual
-sandbox evidence before marking this stage complete.
+Owner: repository maintainer. The bounded authentication recheck succeeded. After Stage 8's separate
+release, implement and validate the revised source-only flow and record actual sandbox evidence
+before marking this stage complete.
 
 Stage 8 public-demo hardening does not require a Stripe adapter and can proceed independently, while
-this stage remains explicitly blocked. No application deployment or schema change is needed for this
-scope/status documentation update.
+this stage remains explicitly unimplemented. No application deployment or schema change is needed
+for this scope/status documentation update.

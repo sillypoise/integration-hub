@@ -12,6 +12,7 @@ it.each([
     [404, "not_found"],
     [400, "invalid"],
     [409, "limit"],
+    [429, "throttled"],
     [503, "unavailable"],
 ] as const)("maps HTTP %s safely", async (status, error) => {
     vi.stubGlobal(
@@ -22,6 +23,21 @@ it.each([
         await demo_request({ path: "/api/demo/overview", method: "GET", schema: z.object({}) }),
     ).toEqual({ ok: false, error });
 });
+it("distinguishes a daily admission denial without exposing response content", async () => {
+    vi.stubGlobal(
+        "fetch",
+        vi.fn<typeof fetch>().mockResolvedValue(
+            new Response("secret", {
+                status: 429,
+                headers: { "retry-after": "86400" },
+            }),
+        ),
+    );
+    expect(
+        await demo_request({ path: "/api/demo/events", method: "POST", schema: z.object({}) }),
+    ).toEqual({ ok: false, error: "budget" });
+});
+
 it("validates successful JSON and sends only same-origin cookie authority", async () => {
     const fetch_mock = vi.fn<typeof fetch>().mockResolvedValue(Response.json({ value: 1 }));
     vi.stubGlobal("fetch", fetch_mock);

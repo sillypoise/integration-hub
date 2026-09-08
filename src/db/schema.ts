@@ -280,7 +280,31 @@ export const p1_simulated_crm_effects = pgTable(
     ],
 );
 
+export const p1_demo_budgets = pgTable(
+    "p1_demo_budgets",
+    {
+        p1_resource: varchar("p1_resource", { length: 16 }).primaryKey(),
+        p1_count: integer("p1_count").notNull(),
+        p1_window_started_at: timestamp("p1_window_started_at", {
+            mode: "date",
+            withTimezone: true,
+        }).notNull(),
+    },
+    (table) => [
+        check(
+            "p1_demo_budgets_p1_resource_check",
+            sql`${table.p1_resource} IN ('events', 'workspaces')`,
+        ),
+        check(
+            "p1_demo_budgets_p1_count_check",
+            sql`${table.p1_count} >= 0 AND ${table.p1_count} <=
+        CASE WHEN ${table.p1_resource} = 'events' THEN 2000 ELSE 200 END`,
+        ),
+    ],
+);
+
 export const application_schema = {
+    p1_demo_budgets,
     p1_simulated_crm_customers,
     p1_simulated_crm_effects,
     p1_audit_events,

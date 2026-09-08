@@ -40,7 +40,15 @@ export function ErrorNotice({
         ],
         limit: [
             "Workspace event limit reached",
-            "This workspace already contains 1,000 events. You can still inspect existing runs.",
+            "This workspace has accepted 1,000 events over its lifetime. Reset does not replenish this limit. Existing runs remain inspectable.",
+        ],
+        throttled: [
+            "Please slow down",
+            "The shared demo request limit was reached. Wait a minute before trying again.",
+        ],
+        budget: [
+            "Demo admission paused",
+            "The shared daily demo budget was reached. Try again tomorrow. A fresh workspace cannot bypass this limit.",
         ],
         retry_denied: [
             "Retry not available",
