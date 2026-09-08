@@ -38,7 +38,12 @@ it.each([0, 10000, 10002])("denies unexpected container UID %s", async (uid) => 
     expect(process.exitCode).toBe(1);
     expect(mocks.start).not.toHaveBeenCalled();
     expect(mocks.stderr).toHaveBeenCalledWith(
-        '{"level":"fatal","message":"Container runtime verification failed."}\n',
+        `${JSON.stringify({
+            level: "fatal",
+            message: "Container runtime verification failed.",
+            uid_valid: false,
+            node_tools_available: false,
+        })}\n`,
     );
 });
 

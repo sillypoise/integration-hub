@@ -19,18 +19,20 @@ COPY . .
 RUN pnpm build
 RUN pnpm prune --prod
 
-FROM node_base AS runtime
+# Start without Node package managers instead of deleting them from inherited image layers.
+FROM docker.io/library/alpine:3.24.1@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b AS runtime
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 WORKDIR /application
 
 # BusyBox account/file utilities expose short flags rather than GNU long options.
-RUN addgroup -g 10001 application \
-    && adduser -u 10001 -G application -D -H application \
-    && rm -rf /usr/local/lib/node_modules /opt/yarn* \
-        /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack \
-        /usr/local/bin/yarn /usr/local/bin/yarnpkg
+RUN apk add --no-cache libstdc++ \
+    && apk upgrade --no-cache \
+    && addgroup -g 10001 application \
+    && adduser -u 10001 -G application -D -H application
+
+COPY --from=node_base /usr/local/bin/node /usr/local/bin/node
 
 COPY --from=build --chown=application:application /application/.next ./.next
 COPY --from=build --chown=application:application /application/drizzle ./drizzle

@@ -112,12 +112,14 @@ The first completed image scan found Debian base-system and bundled npm advisori
 high/critical findings. No application dependency finding was reported. Rather than suppress
 source-package findings for unused OS tools, the image now uses the official Node
 `22.23.2-alpine3.24` multi-platform base pinned by digest, with current Alpine security updates.
-Build and runtime share that base to preserve the musl ABI. Runtime npm, npx, Corepack, and Yarn are
-removed; the application has no runtime package-install requirement. UID/GID 10001 is retained.
-`next.config.ts` is explicitly included so runtime security settings match the tested build. The
-container-only entry point also denies unexpected UIDs or available package tools before importing
-the server. Its bounded startup log provides application-context evidence rather than assuming a
-privileged administrative shell represents the application launch context.
+Build and runtime use the same Alpine 3.24 musl ABI. The runtime starts from digest-pinned plain
+Alpine 3.24.1, installs `libstdc++`, and copies only the pinned Node binary. npm, npx, Corepack, and
+Yarn are never inherited by that final image; the application has no runtime Node package-install
+requirement. UID/GID 10001 is retained. `next.config.ts` is explicitly included so runtime security
+settings match the tested build. The container-only entry point also denies unexpected UIDs or
+available Node package tools before importing the server. Its bounded startup log provides
+application-context evidence rather than assuming a privileged administrative shell represents the
+application launch context.
 
 This reuses the existing official image supplier instead of introducing a new registry. A considered
 distroless image was rejected by the local container trust policy; that policy was not overridden.

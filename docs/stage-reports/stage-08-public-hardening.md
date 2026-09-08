@@ -75,6 +75,19 @@ Stripe integration is claimed.
   starting the application. Eleven focused tests cover valid launch, unexpected UIDs, and all seven
   forbidden tool paths. Its hosted verification and final release review remain pending.
 
+- [CI 34283736847](https://github.com/sillypoise/integration-hub/actions/runs/34283736847) passed
+  195 tests and all other gates with zero scan findings. Its 94 package/version entries matched the
+  preceding CI report. However, deployment `0ba12280-96ff-4e40-a0f1-24bad567d5ae` failed the new
+  application-context runtime check and did not become healthy. The preceding Stage 8 deployment
+  continued serving `200` readiness. No complete-runtime or completed-stage claim is made from the
+  passing CI result alone.
+- Follow-up: use a plain, digest-pinned Alpine runtime containing only the copied Node binary and
+  required OS libraries, rather than deleting inherited Node package managers. This avoids relying
+  on removal of inherited tooling; the underlying Railway discrepancy is not yet explained. Failure
+  logs now distinguish UID validity from Node-tool availability using bounded booleans. Repeated
+  local image audits also remove their owned prior archive/report before export, because Podman
+  rejects overwriting Docker-format archives.
+
 ## Decisions and limits
 
 [Security contract](../security.md) records exact bounds, compatibility, workload estimates, and

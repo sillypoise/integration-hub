@@ -119,6 +119,8 @@ security-tools:
 
 # Scan the actual production image; retain a full report and deny high/critical findings.
 container-audit: security-tools
+    # Archives and reports belong to this invocation; Podman cannot overwrite a Docker archive.
+    rm --force .tools/integration-hub.tar .tools/container-audit.json
     # Trivy accepts a Docker-format tar or an OCI directory, not an OCI-format tar.
     podman save --format docker-archive --output .tools/integration-hub.tar integration-hub:local
     .tools/trivy image --input .tools/integration-hub.tar --scanners vuln --timeout 5m --format json --output .tools/container-audit.json
