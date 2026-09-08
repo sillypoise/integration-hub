@@ -36,8 +36,28 @@ Stripe integration is claimed.
   liveness stayed `200`, readiness and overview returned safe `503` responses, and run
   `930d0de1-83a8-484f-8ff3-3d7be5bf29ae` recovered on attempt two with a destination effect.
   PostgreSQL was confirmed healthy/unpaused afterward. Existing SIGKILL/restart tests also passed.
-- Local OCI build failed at registry TLS handshakes before building the image. This is not a clean
-  image scan; hosted build/scan evidence is required before completion.
+- Initial local image builds were blocked by registry TLS handshakes. Registry access subsequently
+  worked. The reduced Alpine candidate built and its all-severity Trivy scan reported zero
+  vulnerabilities without ignore rules. Local container startup encountered `ECONNREFUSED` to the
+  loopback-only PostgreSQL service through Podman's host alias; this is not a passing startup check.
+  Hosted smoke/migration checks remain required.
+
+## Hosted image review in progress
+
+- [CI 34257152565](https://github.com/sillypoise/integration-hub/actions/runs/34257152565) passed
+  application checks and container smoke, but Trivy rejected the OCI tar input. The export was
+  corrected to Docker archive format; this failed scan was not counted as vulnerability evidence.
+- [CI 34257862889](https://github.com/sillypoise/integration-hub/actions/runs/34257862889) retained
+  the first completed all-severity report: Debian packages had 4 critical, 52 high, 88 medium, 72
+  low, and 5 unknown entries; bundled npm had 1 critical, 10 high, 7 medium, and 1 low entry. These
+  are package/advisory entries, not distinct remotely exploitable defects. Application dependencies
+  had no findings. The release gate correctly failed; production was not changed.
+- Disposition: replace the unused Debian tooling surface with the digest-pinned official Node Alpine
+  base and current OS security updates; remove runtime npm/Corepack/Yarn. Do not suppress findings
+  or relax the high/critical gate. Build/runtime ABI and UID/GID remain explicit. Also include
+  `next.config.ts` in the runtime image. See [runtime rationale](../security.md).
+- The revised image requires another hosted scan, smoke check, and controlled deployment before this
+  stage can be marked complete.
 
 ## Decisions and limits
 

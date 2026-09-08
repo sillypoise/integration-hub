@@ -75,12 +75,20 @@ container-start:
         --publish 127.0.0.1:3000:3000 \
         integration-hub:local >/dev/null
 
-# Build, run, and verify the production container with bounded cleanup.
+# Check runtime identity, release migrations, readiness, and disabled image optimization.
 container-smoke: container-build container-start
     @trap 'podman stop --time 15 integration-hub-application >/dev/null || true' EXIT; \
     timeout 45s podman wait --condition healthy integration-hub-application >/dev/null; \
-    test "$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' \
-        http://127.0.0.1:3000/health/ready)" = "200"
+    timeout 15s podman exec integration-hub-application node -e "\
+        const assert = require('node:assert/strict');\
+        assert.equal(process.version, 'v22.23.2');\
+        assert.equal(process.getuid(), 10001);\
+        assert.equal(require('node:fs').existsSync('/usr/local/lib/node_modules'), false);"; \
+    timeout 30s podman exec integration-hub-application node src/scripts/migrate_database.ts; \
+    test "$(curl --silent --show-error --max-time 5 --output /dev/null \
+        --write-out '%{http_code}' http://127.0.0.1:3000/health/ready)" = "200"; \
+    test "$(curl --silent --show-error --max-time 5 --output /dev/null \
+        --write-out '%{http_code}' 'http://127.0.0.1:3000/_next/image?url=%2F&w=64&q=75')" = "404"
 
 # Stop the local production application container.
 container-stop:
