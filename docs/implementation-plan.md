@@ -231,8 +231,8 @@ Do not weaken credential isolation merely to preserve the real-integration claim
 
 ## Stage 8: Public-demo hardening
 
-**Status:** Implementation and local validation complete; hosted CI, image review, and deployment
-checks pending. Stage 8 proceeds independently with maintainer approval; Stage 7 implementation
+**Status:** Complete: hosted CI, image/runtime review, controlled cutover, and public desktop/mobile
+checks passed. Stage 8 was completed independently with maintainer approval; Stage 7 implementation
 remains pending despite restored Stripe access. See
 [`stage-08-public-hardening.md`](stage-reports/stage-08-public-hardening.md).
 

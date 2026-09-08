@@ -116,9 +116,36 @@ reset, authorization, and health on the public origin. Reload old browser tabs. 
 fix forward rather than deploying Stage 5 code over new jobs. See
 [ADR 0003](adr/0003-bounded-simulated-recovery.md) for compatibility and resource bounds.
 
+## Stage 8 controlled cutover and image gate
+
+Run the CI dependency, bundle, container smoke, and image-audit gates before release. Review all
+findings, not only the automated high/critical threshold. The runtime uses digest-pinned Alpine and
+a copied, pinned Node binary; Node package managers are not inherited. `next.config.ts` ships with
+the application. The container entry point verifies UID 10001 and unavailable Node package tools
+before starting web/worker; an unexpected runtime fails closed.
+
+Stop old quota-unaware intake with `just deployment-stop stop-current-deployment`, confirm it is
+removed, then run `just deploy`. Migration `0005_puzzling_blizzard.sql` adds the two durable budget
+rows. Existing workers remain schema-compatible, but old intake can bypass the new budgets, so it
+must not overlap the initial cutover. Later Stage 8-only image corrections retain the same contract.
+Fix forward after activation rather than restoring quota-unaware code.
+
+Confirm release migration success, the `Container runtime verified.` startup record, readiness,
+security headers, and scoped desktop/mobile recovery. Compare deployed package versions to the
+retained CI image report; a Railway rebuild is not a byte-identical artifact attestation. Repeat
+review if versions drift. Public probes must not exhaust shared quotas or alter other visitors. Keep
+outage/destructive database drills confined to disposable local/CI databases.
+
 ## Deployment evidence
 
-Current Stage 6 deployment `ba1a60c9-6532-4344-888f-f0346c0d9e24` passed release and readiness
+Current Stage 8 deployment `405e947e-2b25-4f66-9b67-e6ce77b2d426` passed runtime launch verification
+and ten hosted desktop/mobile checks. Six migrations, retained admission budgets,
+provider-credential absence, and 94 matching OS/application package versions were verified. Its CI
+image scan had zero findings at all severities. See the
+[Stage 8 report](stage-reports/stage-08-public-hardening.md) for evidence and the failed
+intermediate runtime check; do not bypass that gate during future image changes.
+
+Previous Stage 6 deployment `ba1a60c9-6532-4344-888f-f0346c0d9e24` passed release and readiness
 following the controlled worker cutover. Hosted desktop/mobile flows verified exhaustion, manual
 restoration, reset, and denial paths; separate probes verified automatic recovery and immediate
 terminal failure. Five migrations and retained audit history were confirmed. See the

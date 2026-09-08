@@ -2,104 +2,93 @@
 
 ## Status
 
-Implementation and local validation complete; hosted image review, CI, and deployment verification
-remain pending. Stage 7 source-adapter implementation is still pending despite restored access; no
-Stripe integration is claimed.
+Complete, independently of the still-unimplemented Stage 7 Stripe source adapter. Public
+integrations remain explicitly simulated. No real-adapter completion or general security guarantee
+is claimed.
+
+- Release commit: `6cf7a77`.
+- Railway deployment: `405e947e-2b25-4f66-9b67-e6ce77b2d426`.
+- [Passing CI 34285122039](https://github.com/sillypoise/integration-hub/actions/runs/34285122039).
+- Public origin: <https://p1-integration-hub-production.up.railway.app>.
 
 ## Delivered
 
-- Fixed-cardinality HTTP request, mutation, creation, health, concurrency, connection, header, URL,
-  and timeout limits. No IP tracking or forwarded-header authority.
-- Two durable global admission budgets and a reset-resistant workspace lifetime event limit. Atomic
-  admission rollback/replay behavior and a forward-only migration preserve invariants.
-- Per-response CSP script nonces, dynamic rendering, framing/referrer/permissions/resource headers,
-  HTTPS HSTS, disabled public source maps, and disabled unused image optimization.
-- Explicit rate/budget UI errors and safe diagnostics without arbitrary dependency error names.
-- Reused deterministic success, retry recovery, and terminal-failure controls; no bulk seed API or
-  second scenario framework. Existing retries, reset, cleanup, cookie isolation, and polling bounds
-  remain in force.
-- Pinned/checksummed Trivy tooling and CI image reports; dependency and public-bundle checks in the
-  normal validation workflow. Patched the discovered development-only esbuild advisory.
+- Fixed-cardinality HTTP admission, concurrency, connection, header, URL, and timeout bounds; no IP
+  tracking or forwarded-header authority.
+- Transactional global admission budgets and a reset-resistant workspace lifetime event cap,
+  including rollback, replay, expiry, exhaustion, and missing-budget denial checks.
+- Fresh CSP nonces, dynamic rendering, security headers, disabled source maps/image optimization,
+  and explicit rate/budget UI errors. Runtime packaging includes `next.config.ts`.
+- Dependency/bundle/image audit gates, retained image reports, and a patched development-only
+  esbuild dependency. No vulnerability ignore rules or relaxed severity gate.
+- A digest-pinned Alpine runtime containing the pinned Node binary but no inherited Node package
+  managers. A container-only launch check rejects unexpected UID or available Node package tools
+  before importing the application.
 
-## Local evidence
+## Verification
 
-- `just validate` passed 184 unit/integration tests, 34 Chromium desktop/mobile checks, formatting,
-  strict lint/types, production build, bundle inspection, and dependency audit.
-- Server/contract coverage: 99.46% statements / 98.54% branches in the configured scope, not React
-  coverage. Public bundle inspection checked 1,026,188 JavaScript bytes with no server-only markers
-  or source maps. Dependency audit reports no known vulnerabilities after the scoped override.
-- Browser checks verify fresh nonce headers, normal hydration/navigation, actual rejection of
-  parser-injected scripts, denial responses, header/URL bounds, and readable quota errors. The
-  initial DevTools-based injection was corrected because it bypassed CSP rather than modeling
-  attacker-supplied HTML.
-- `just outage-check pause-local-database` passed against the disposable local PostgreSQL container:
-  liveness stayed `200`, readiness and overview returned safe `503` responses, and run
-  `930d0de1-83a8-484f-8ff3-3d7be5bf29ae` recovered on attempt two with a destination effect.
-  PostgreSQL was confirmed healthy/unpaused afterward. Existing SIGKILL/restart tests also passed.
-- Initial local image builds were blocked by registry TLS handshakes. Registry access subsequently
-  worked. The reduced Alpine candidate built and its all-severity Trivy scan reported zero
-  vulnerabilities without ignore rules. Local container startup encountered `ECONNREFUSED` to the
-  loopback-only PostgreSQL service through Podman's host alias; this is not a passing startup check.
-  Hosted smoke/migration checks remain required.
+- Final CI passed 195 unit/integration tests, 34 desktop/mobile browser checks, strict formatting,
+  lint/types, build, dependency audit, and production-container smoke. Configured coverage was
+  99.48% statements / 98.57% branches, not whole-application or React coverage.
+- Container smoke verified Node 22.23.2, UID 10001, absent global Node tooling, release migrations,
+  readiness, and `404` for the disabled image optimizer. Eleven entry-point tests exercise valid
+  launch, three invalid UIDs, and all seven forbidden tool paths without starting the server.
+- Public-bundle inspection checked 1,026,188 JavaScript bytes: no checked server-only markers or
+  public source maps. Dependency and image audits reported no known vulnerabilities.
+- The retained CI image report contains 18 OS and 76 application package entries, with zero findings
+  at all severities. Report SHA-256:
+  `65d5d15dc095a0250e489881a889d3dd073b42321659c3907c78698317af06d7`.
+- Final Railway startup emitted `Container runtime verified.` before accepting traffic. Read-only
+  inspection confirmed main-process UID 10001, no global npm/Corepack/Yarn, no provider credential
+  variables, and package versions matching the final CI inventory. Railway rebuilds the image; this
+  is package/version evidence, not byte-identical artifact attestation.
+- Ten selected checks passed again on the final public release using Desktop Chrome and Pixel 7:
+  mapping/replay, automatic recovery, exhaustion/manual restoration, terminal failure, scoped
+  denial/reset, responsive layout, hydration, and actual parser-injected-script rejection.
+- Separate public probes confirmed `200` health, `401` unauthorized overview, `414` oversized URL,
+  `431` oversized headers, and `404` image optimization. Application responses had expected HSTS,
+  nosniff, no-store where required, and no framework-identification header.
+- Six migrations and two retained budget rows were verified. After the hosted checks, counters were
+  16 accepted events / 24 workspaces across releases; audits retained 16 acceptances, 4 retries, 8
+  reset records, and 24 creations. Shared production quotas were not exhausted to test rejection;
+  those paths were tested against disposable databases and controlled HTTP guards.
+- The local database-pause drill preserved live `200`, returned ready/overview `503`, and recovered
+  run `930d0de1-83a8-484f-8ff3-3d7be5bf29ae` on attempt two. PostgreSQL was unpaused afterward.
+  Existing real SIGKILL/restart tests passed. The local container host-alias connection refusal was
+  not counted as passing startup evidence; hosted container and release checks supply that evidence.
 
-## Hosted image review in progress
+## Findings and controlled rollout
 
-- [CI 34257152565](https://github.com/sillypoise/integration-hub/actions/runs/34257152565) passed
-  application checks and container smoke, but Trivy rejected the OCI tar input. The export was
-  corrected to Docker archive format; this failed scan was not counted as vulnerability evidence.
-- [CI 34257862889](https://github.com/sillypoise/integration-hub/actions/runs/34257862889) retained
-  the first completed all-severity report: Debian packages had 4 critical, 52 high, 88 medium, 72
-  low, and 5 unknown entries; bundled npm had 1 critical, 10 high, 7 medium, and 1 low entry. These
-  are package/advisory entries, not distinct remotely exploitable defects. Application dependencies
-  had no findings. The release gate correctly failed; production was not changed.
-- Disposition: replace the unused Debian tooling surface with the digest-pinned official Node Alpine
-  base and current OS security updates; remove runtime npm/Corepack/Yarn. Do not suppress findings
-  or relax the high/critical gate. Build/runtime ABI and UID/GID remain explicit. Also include
-  `next.config.ts` in the runtime image. See [runtime rationale](../security.md).
-- [CI 34280208513](https://github.com/sillypoise/integration-hub/actions/runs/34280208513) passed
-  all checks, including UID/version/package-tool assertions, release migrations, disabled image
-  optimization, and an all-severity scan with zero findings. Report SHA-256:
-  `62112a89c2a4565b3bc483e78fffe6eb3bf4652054a4fb877a40fc103a895871`.
-- Stage 6 was confirmed removed before deployment `6352271e-5d13-47b5-a20e-fc21bbfc4b28` became
-  healthy. Ten selected hosted desktop/mobile checks passed: mapping/replay, exhaustion and manual
-  restoration, automatic third-attempt recovery, terminal failure and foreign-workspace denial,
-  reset isolation, hydration, and parser-injected-script rejection. Separate probes confirmed `200`
-  health, `401` overview, `414` oversized URL, `404` image optimizer, HSTS, no-store, and absent
-  framework identification headers.
-- Read-only inspection confirmed six migrations, budget counts of 8 events / 12 workspaces, and
-  retained acceptance/retry/reset audits. Eighteen OS and 76 application package versions matched
-  the CI inventory. No provider credential variables were present. The main process reported UID
-  10001, whereas the SSH inspection process used UID 0 and exposed extra global npm/Corepack
-  tooling. This discrepancy is not assumed harmless or counted as a complete runtime inventory.
-- A container-only startup check now rejects unexpected UID/package-tool availability before
-  starting the application. Eleven focused tests cover valid launch, unexpected UIDs, and all seven
-  forbidden tool paths. Its hosted verification and final release review remain pending.
+- [CI 34257152565](https://github.com/sillypoise/integration-hub/actions/runs/34257152565) exposed
+  an unsupported OCI-tar scanner input. Podman now exports Docker-format archives and clears its
+  owned previous archive/report before repeat exports. Scanner failures were not called clean scans.
+- [CI 34257862889](https://github.com/sillypoise/integration-hub/actions/runs/34257862889) found
+  Debian package advisories (4 critical / 52 high / 88 medium / 72 low / 5 unknown entries) and
+  bundled npm advisories (1 critical / 10 high / 7 medium / 1 low). These were package/advisory
+  entries, not distinct proven remote exploits. Replacing that runtime surface removed the findings.
+- The first Alpine candidate passed
+  [CI 34280208513](https://github.com/sillypoise/integration-hub/actions/runs/34280208513). Stage 6
+  was confirmed removed before Stage 8 deployment `6352271e-5d13-47b5-a20e-fc21bbfc4b28`. Public
+  checks passed, but hosted inspection exposed global tooling absent from CI.
+- Adding application-context checks passed
+  [CI 34283736847](https://github.com/sillypoise/integration-hub/actions/runs/34283736847), but
+  replacement `0ba12280-96ff-4e40-a0f1-24bad567d5ae` correctly failed its launch boundary. The
+  previous deployment continued serving. The final image never inherits Node package managers, and
+  both its hosted launch check and subsequent inventory inspection passed. The earlier Railway
+  image/runtime discrepancy's underlying cause remains unexplained; do not remove the gate.
 
-- [CI 34283736847](https://github.com/sillypoise/integration-hub/actions/runs/34283736847) passed
-  195 tests and all other gates with zero scan findings. Its 94 package/version entries matched the
-  preceding CI report. However, deployment `0ba12280-96ff-4e40-a0f1-24bad567d5ae` failed the new
-  application-context runtime check and did not become healthy. The preceding Stage 8 deployment
-  continued serving `200` readiness. No complete-runtime or completed-stage claim is made from the
-  passing CI result alone.
-- Follow-up: use a plain, digest-pinned Alpine runtime containing only the copied Node binary and
-  required OS libraries, rather than deleting inherited Node package managers. This avoids relying
-  on removal of inherited tooling; the underlying Railway discrepancy is not yet explained. Failure
-  logs now distinguish UID validity from Node-tool availability using bounded booleans. Repeated
-  local image audits also remove their owned prior archive/report before export, because Podman
-  rejects overwriting Docker-format archives.
+## Limits and follow-up
 
-## Decisions and limits
+The [security contract](../security.md) records bounds, estimates, compatibility, and tradeoffs.
+Shared quotas are not fairness or DDoS guarantees; fixed-window boundaries permit short bursts. HTTP
+counters are per-process; durable budgets span restarts and replicas. Reset cannot replenish
+lifetime admissions. Old quota-unaware intake must not return after activation; fix forward.
 
-[Security contract](../security.md) records exact bounds, compatibility, workload estimates, and
-failure behavior. Shared quotas bound costs but do not guarantee fairness or DDoS resistance.
-Fixed-window boundaries can admit twice a window's allowance in a short interval. HTTP counters are
-per-process; durable accepted-work budgets span restarts/replicas. Reset cannot replenish them.
+Confidence: high for the recorded checks, not proof of absence of vulnerabilities. The maintainer
+must repeat image/runtime verification on future image changes and review operating costs in
+Stage 9. Repository-wide assertion density remains unmeasured; no aggregate TigerStyle compliance is
+claimed.
 
-No raw customer data, credentials, or provider authority is introduced. New `429` codes are
-additive; the lifetime event-limit semantics and early HTTP rejection precedence are explicit
-contract changes. The schema is additive and fail-closed; old workers remain compatible, but old
-intake processes must stop at cutover because they do not enforce admission budgets.
-
-Guide trace: `SAF-02/11` bounds and negative tests; `SECCORE-BOUND-003/AUTH-002` fail-closed scoped
-operations; `SIMPLE-ADMIT-003` reuse of audit/queue/scenario mechanisms; `CONTRACT-CHG-001/002`
-contract delta and boundary checks; `EPI-CLAIM-001` hosted evidence required before completion.
+Guide trace: `SAF-02/11` bounded work and negative tests; `SECCORE-BOUND-003/AUTH-002` fail-closed
+scoped operations; `SIMPLE-ADMIT-003` reuse; `CONTRACT-CHG-001/002` contract and boundary review;
+`EPI-CLAIM-001/002` separate observed hosted evidence from assumptions and unresolved causes.
