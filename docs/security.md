@@ -114,16 +114,20 @@ source-package findings for unused OS tools, the image now uses the official Nod
 `22.23.2-alpine3.24` multi-platform base pinned by digest, with current Alpine security updates.
 Build and runtime share that base to preserve the musl ABI. Runtime npm, npx, Corepack, and Yarn are
 removed; the application has no runtime package-install requirement. UID/GID 10001 is retained.
-`next.config.ts` is explicitly included so runtime security settings match the tested build.
+`next.config.ts` is explicitly included so runtime security settings match the tested build. The
+container-only entry point also denies unexpected UIDs or available package tools before importing
+the server. Its bounded startup log provides application-context evidence rather than assuming a
+privileged administrative shell represents the application launch context.
 
 This reuses the existing official image supplier instead of introducing a new registry. A considered
 distroless image was rejected by the local container trust policy; that policy was not overridden.
 Alpine/native-module and release migration compatibility require hosted smoke tests. The digest
 reference necessarily exceeds 100 columns in `Containerfile` (external reference, `FMT-03`); BusyBox
 account/file utilities require their supported short flags (`DX-03`). Security package updates make
-builds time-dependent, so every release image must be scanned rather than assuming a prior scan
-covers it. The local candidate scan reported zero vulnerabilities at all severities, with no ignore
-file or severity suppression.
+builds time-dependent: scan each CI release candidate and compare deployed OS/application package
+versions against that report; drift requires another scan. Railway rebuilds the image, so the CI
+scan is not a byte-identical deployed-artifact attestation. The local candidate scan reported zero
+vulnerabilities at all severities, with no ignore file or severity suppression.
 
 Image scan results and final hosted evidence are recorded in the
 [Stage 8 report](stage-reports/stage-08-public-hardening.md); this document alone does not assert a

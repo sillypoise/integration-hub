@@ -42,4 +42,4 @@ COPY --from=build --chown=application:application /application/src ./src
 USER application
 EXPOSE 3000
 
-CMD ["node", "src/server.ts"]
+CMD ["node", "src/container.ts"]

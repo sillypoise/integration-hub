@@ -56,8 +56,24 @@ Stripe integration is claimed.
   base and current OS security updates; remove runtime npm/Corepack/Yarn. Do not suppress findings
   or relax the high/critical gate. Build/runtime ABI and UID/GID remain explicit. Also include
   `next.config.ts` in the runtime image. See [runtime rationale](../security.md).
-- The revised image requires another hosted scan, smoke check, and controlled deployment before this
-  stage can be marked complete.
+- [CI 34280208513](https://github.com/sillypoise/integration-hub/actions/runs/34280208513) passed
+  all checks, including UID/version/package-tool assertions, release migrations, disabled image
+  optimization, and an all-severity scan with zero findings. Report SHA-256:
+  `62112a89c2a4565b3bc483e78fffe6eb3bf4652054a4fb877a40fc103a895871`.
+- Stage 6 was confirmed removed before deployment `6352271e-5d13-47b5-a20e-fc21bbfc4b28` became
+  healthy. Ten selected hosted desktop/mobile checks passed: mapping/replay, exhaustion and manual
+  restoration, automatic third-attempt recovery, terminal failure and foreign-workspace denial,
+  reset isolation, hydration, and parser-injected-script rejection. Separate probes confirmed `200`
+  health, `401` overview, `414` oversized URL, `404` image optimizer, HSTS, no-store, and absent
+  framework identification headers.
+- Read-only inspection confirmed six migrations, budget counts of 8 events / 12 workspaces, and
+  retained acceptance/retry/reset audits. Eighteen OS and 76 application package versions matched
+  the CI inventory. No provider credential variables were present. The main process reported UID
+  10001, whereas the SSH inspection process used UID 0 and exposed extra global npm/Corepack
+  tooling. This discrepancy is not assumed harmless or counted as a complete runtime inventory.
+- A container-only startup check now rejects unexpected UID/package-tool availability before
+  starting the application. Eleven focused tests cover valid launch, unexpected UIDs, and all seven
+  forbidden tool paths. Its hosted verification and final release review remain pending.
 
 ## Decisions and limits
 
