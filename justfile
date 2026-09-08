@@ -111,7 +111,8 @@ security-tools:
 
 # Scan the actual production image; retain a full report and deny high/critical findings.
 container-audit: security-tools
-    podman save --format oci-archive --output .tools/integration-hub.tar integration-hub:local
+    # Trivy accepts a Docker-format tar or an OCI directory, not an OCI-format tar.
+    podman save --format docker-archive --output .tools/integration-hub.tar integration-hub:local
     .tools/trivy image --input .tools/integration-hub.tar --scanners vuln --timeout 5m --format json --output .tools/container-audit.json
     .tools/trivy image --input .tools/integration-hub.tar --scanners vuln --timeout 5m --severity HIGH,CRITICAL --exit-code 1
 
