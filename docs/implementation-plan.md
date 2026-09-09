@@ -196,10 +196,10 @@ The difficult operational behavior is visible, bounded, and safe to exercise.
 
 ## Stage 7: Stripe source sandbox evidence (revised scope)
 
-**Status:** Implementation and real sandbox verification complete; final hosted CI/image-isolation
-checks pending. The maintainer approved narrowing this stage to Stripe test mode → simulated CRM;
-the real HubSpot destination is explicitly deferred. See
-[`stage-07-stripe-source.md`](stage-reports/stage-07-stripe-source.md).
+**Status:** Complete: real sandbox persistence/replay/cleanup verified, with hosted CI and image
+isolation checks passing. The public runtime remains simulated. The maintainer approved narrowing
+this stage to Stripe test mode → simulated CRM; the real HubSpot destination is explicitly deferred.
+See [`stage-07-stripe-source.md`](stage-reports/stage-07-stripe-source.md).
 
 ### Outcome
 

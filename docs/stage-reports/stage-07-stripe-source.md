@@ -2,9 +2,10 @@
 
 ## Status
 
-Implementation and real sandbox verification complete; hosted CI/image-isolation checks pending.
-Approved scope: **Stripe test-mode source → simulated CRM**. HubSpot remains deferred. The public
-source and destination stay simulated; this is not an external CRM integration or production case.
+Complete. Implementation `2b8ec8f` passed real sandbox verification and hosted CI/image-isolation
+checks. Approved scope: **Stripe test-mode source → simulated CRM**. HubSpot remains deferred. The
+public source and destination stay simulated; this is not an external CRM integration or production
+case.
 
 ## Delivered
 
@@ -41,7 +42,7 @@ removing only its own synthetic test customer. The final checked run was
 - Initial connectivity failures were resolved before implementation. No inference about their cause
   or a provider outage is made from those earlier timeouts.
 
-## Validation and remaining gate
+## Validation
 
 - Local `just validate` passed 251 unit/integration tests, 34 desktop/mobile browser checks,
   formatting, strict lint/types, build, public-bundle inspection, and dependency audit.
@@ -55,8 +56,13 @@ removing only its own synthetic test customer. The final checked run was
 - The local container built from the explicit allowlist without maintainer code or pre-generated
   Next.js types. Runtime checks confirmed UID 10001 and absent maintainer/global Node-tool paths;
   its all-severity image scan reported zero findings.
-- Hosted CI and production-container absence/scan checks remain required before final completion.
-  The public Stage 8 deployment is unchanged; the private sandbox command is not a public feature.
+- Hosted [CI 34293538790](https://github.com/sillypoise/integration-hub/actions/runs/34293538790)
+  passed all gates, including production-container startup, readiness, and maintainer-code absence.
+  The retained image report contains 94 packages and zero findings at all severities, without
+  ignores. Report SHA-256: `34c3c5464069be19f57e045341557b6b22c553b6bc71aa575c66ef75bd8127fc`.
+- CI coverage was 99.52% statements / 97.69% branches / 98.75% functions / 99.48% lines in the
+  configured scope, not the whole application. The public Stage 8 deployment is unchanged; the
+  private sandbox command is not a public feature and did not require a public deployment.
 
 ## Limits and guide trace
 

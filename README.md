@@ -9,12 +9,11 @@ public demo without pretending to be a general-purpose integration platform.
 
 ## Status
 
-Stages 1–6 and Stage 8 are complete, including hosted hardening verification. Stage 7 is narrowed to
-a maintainer-only Stripe test source with simulated CRM; HubSpot is deferred. The source adapter has
-real sandbox persistence/replay/cleanup evidence; its final CI/image gate remains pending. No
-external CRM integration is claimed. See the
-[Stage 7 report](docs/stage-reports/stage-07-stripe-source.md). The product boundary is documented
-in [`docs/product-brief.md`](docs/product-brief.md), the stack in
+Stages 1–8 are complete. The public simulated flow has hosted verification; Stage 7 adds a separate
+maintainer-only Stripe test source with real sandbox persistence, replay, and cleanup evidence plus
+passing CI/image-isolation checks. HubSpot remains deferred; no external CRM integration is claimed.
+See the [Stage 7 report](docs/stage-reports/stage-07-stripe-source.md). The product boundary is
+documented in [`docs/product-brief.md`](docs/product-brief.md), the stack in
 [`docs/tech-stack.md`](docs/tech-stack.md), and the delivery sequence in
 [`docs/implementation-plan.md`](docs/implementation-plan.md). Completed work is summarized in
 [`docs/stage-reports/`](docs/stage-reports/).
