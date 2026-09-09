@@ -196,9 +196,9 @@ The difficult operational behavior is visible, bounded, and safe to exercise.
 
 ## Stage 7: Stripe source sandbox evidence (revised scope)
 
-**Status:** Connectivity and read-only test-key authentication now verified; implementation pending.
-The maintainer approved narrowing this stage to Stripe test mode → simulated CRM; the real HubSpot
-destination is explicitly deferred. See
+**Status:** Implementation and real sandbox verification complete; final hosted CI/image-isolation
+checks pending. The maintainer approved narrowing this stage to Stripe test mode → simulated CRM;
+the real HubSpot destination is explicitly deferred. See
 [`stage-07-stripe-source.md`](stage-reports/stage-07-stripe-source.md).
 
 ### Outcome
@@ -233,7 +233,7 @@ Do not weaken credential isolation merely to preserve the real-integration claim
 
 **Status:** Complete: hosted CI, image/runtime review, controlled cutover, and public desktop/mobile
 checks passed. Stage 8 was completed independently with maintainer approval; Stage 7 implementation
-remains pending despite restored Stripe access. See
+is tracked separately. See
 [`stage-08-public-hardening.md`](stage-reports/stage-08-public-hardening.md).
 
 ### Outcome

@@ -15,7 +15,10 @@ RUN pnpm install --frozen-lockfile
 
 FROM dependencies AS build
 
-COPY . .
+# An explicit build allowlist prevents maintainer adapters from entering server bundles.
+COPY next.config.ts tsconfig.json postcss.config.mjs ./
+COPY src ./src
+COPY drizzle ./drizzle
 RUN pnpm build
 RUN pnpm prune --prod
 

@@ -6,17 +6,18 @@ export default defineConfig({
         fileParallelism: false,
         globals: false,
         globalSetup: ["src/lib/jobs/test_queue_setup.ts"],
-        include: ["src/**/*.test.ts"],
+        include: ["src/**/*.test.ts", "maintainer/**/*.test.ts"],
         passWithNoTests: false,
         testTimeout: 5_000,
         hookTimeout: 5_000,
         coverage: {
             provider: "v8",
             reporter: ["text", "json", "html"],
-            include: ["src/**/*.ts"],
+            include: ["src/**/*.ts", "maintainer/stripe_source.ts"],
             // Runtime wiring is verified by PostgreSQL and browser integration tests.
             exclude: [
                 "src/**/*.test.ts",
+                "maintainer/**/*.test.ts",
                 "src/app/**",
                 "src/db/schema.ts",
                 "src/lib/database/**",

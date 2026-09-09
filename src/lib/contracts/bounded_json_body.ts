@@ -3,7 +3,9 @@ import { application_logger } from "../observability/application_logger.ts";
 
 export const p1_http_body_max_bytes = 16_384;
 
-export async function read_p1_json_body(request: Request): Promise<unknown> {
+export async function read_p1_json_body(
+    request: Readonly<Pick<Request, "url" | "headers" | "body">>,
+): Promise<unknown> {
     assert.ok(p1_http_body_max_bytes > 0);
     assert.ok(request.url.length > 0);
     if (request.headers.get("content-type")?.split(";")[0]?.trim() !== "application/json") {

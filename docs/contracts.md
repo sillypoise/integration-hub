@@ -268,6 +268,15 @@ Errors contain one stable `code` and no stack, SQL, token, raw payload, or provi
 Database and provider errors are logged only as safe error classes. Authorization failures fail
 closed and do not reveal whether a protected resource exists.
 
+## Maintainer-only Stripe boundary
+
+The maintainer owns the separate [sandbox contract](stripe-sandbox.md), including explicit opt-in,
+synthetic fixture identity, account-bound interruption recovery, bounded provider errors, and
+cleanup. This boundary is additive and is absent from the public application image. It reuses the
+normalized event and worker contracts without a migration or new public authority. The common
+bounded JSON reader accepts response fields as well as request fields; existing HTTP behavior is
+unchanged.
+
 ## Retention and ownership
 
 Domain rows, including CRM customers and effect records, are owned by their `p1_workspace_id` and

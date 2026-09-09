@@ -2,9 +2,9 @@
 
 ## Status
 
-Complete, independently of the still-unimplemented Stage 7 Stripe source adapter. Public
-integrations remain explicitly simulated. No real-adapter completion or general security guarantee
-is claimed.
+Completed independently of Stage 7; later maintainer-only Stripe evidence is recorded separately.
+Public integrations remain explicitly simulated. No real-adapter completion or general security
+guarantee is claimed.
 
 - Release commit: `6cf7a77`.
 - Railway deployment: `405e947e-2b25-4f66-9b67-e6ce77b2d426`.

@@ -51,8 +51,9 @@ recovery.
 
 The revised maintainer-only test scope uses Stripe test mode as the source and keeps the existing
 simulated CRM destination. The maintainer approved deferring HubSpot rather than adding another
-provider solely to complete the stage. This source-only evidence remains pending and must not be
-presented as a real external CRM integration. The decision and validation conditions are recorded in
+provider solely to complete the stage. Source-only sandbox evidence is recorded in the
+[Stage 7 report](stage-reports/stage-07-stripe-source.md); it must not be presented as a real
+external CRM integration. The decision and validation conditions are recorded in
 [`tech-stack.md`](tech-stack.md) and [`implementation-plan.md`](implementation-plan.md).
 
 ## 3. Failure and recovery behavior

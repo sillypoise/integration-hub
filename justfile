@@ -83,7 +83,8 @@ container-smoke: container-build container-start
         const assert = require('node:assert/strict');\
         assert.equal(process.version, 'v22.23.2');\
         assert.equal(process.getuid(), 10001);\
-        assert.equal(require('node:fs').existsSync('/usr/local/lib/node_modules'), false);"; \
+        assert.equal(require('node:fs').existsSync('/usr/local/lib/node_modules'), false);\
+        assert.equal(require('node:fs').existsSync('/application/maintainer'), false);"; \
     timeout 30s podman exec integration-hub-application node src/scripts/migrate_database.ts; \
     test "$(curl --silent --show-error --max-time 5 --output /dev/null \
         --write-out '%{http_code}' http://127.0.0.1:3000/health/ready)" = "200"; \
@@ -220,6 +221,11 @@ deployment-stop confirmation:
 # Deploy the current checkout to the existing Railway application service.
 deploy:
     railway up --service p1-integration-hub --detach
+
+# Create/read/delete one owned Stripe test fixture and verify local simulated CRM persistence.
+stripe-evidence confirmation:
+    @test {{ quote(confirmation) }} = create-and-delete-test-customer
+    NODE_ENV=production timeout --kill-after=10s 150s node maintainer/stripe_evidence.ts {{ quote(confirmation) }}
 
 # Print the active project tool versions.
 runtime:

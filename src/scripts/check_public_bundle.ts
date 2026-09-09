@@ -10,6 +10,8 @@ async function check_public_bundle(): Promise<void> {
         "p1_token_hash",
         "postgresql://",
         "STRIPE_SECRET_KEY",
+        "api.stripe.com",
+        "p1_stripe_probe",
         "HUBSPOT_ACCESS_TOKEN",
     ];
     const files = entries.filter((entry) => entry.isFile());

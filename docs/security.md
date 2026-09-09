@@ -1,8 +1,8 @@
 # Public-demo security and resource contract
 
 Owner: repository maintainer. Stage 8 hardens the existing simulated flow; no real adapter is
-introduced. Stripe access is restored, but its source adapter remains unimplemented; HubSpot is
-deferred as recorded in the Stage 7 report.
+introduced into the public runtime. Stripe source evidence now uses a separate maintainer-only
+[workflow](stripe-sandbox.md); HubSpot remains deferred. Public configuration cannot enable it.
 
 ## Admission limits
 

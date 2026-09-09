@@ -10,10 +10,11 @@ public demo without pretending to be a general-purpose integration platform.
 ## Status
 
 Stages 1–6 and Stage 8 are complete, including hosted hardening verification. Stage 7 is narrowed to
-a maintainer-only Stripe test source with simulated CRM; HubSpot is deferred. Stripe connectivity
-and read-only authentication now work; adapter implementation remains pending. No real-adapter
-completion is claimed. See the [Stage 7 report](docs/stage-reports/stage-07-stripe-source.md). The
-product boundary is documented in [`docs/product-brief.md`](docs/product-brief.md), the stack in
+a maintainer-only Stripe test source with simulated CRM; HubSpot is deferred. The source adapter has
+real sandbox persistence/replay/cleanup evidence; its final CI/image gate remains pending. No
+external CRM integration is claimed. See the
+[Stage 7 report](docs/stage-reports/stage-07-stripe-source.md). The product boundary is documented
+in [`docs/product-brief.md`](docs/product-brief.md), the stack in
 [`docs/tech-stack.md`](docs/tech-stack.md), and the delivery sequence in
 [`docs/implementation-plan.md`](docs/implementation-plan.md). Completed work is summarized in
 [`docs/stage-reports/`](docs/stage-reports/).
@@ -32,6 +33,13 @@ and ten-second waits. Invalid destination data stops immediately. Failed runs of
 **Restore simulator & retry** action, preserving their history. **Reset synthetic records** deletes
 only your workspace's synthetic records, keeps audit history, and allows three resets; starting a
 fresh workspace is a separate action.
+
+## Private Stripe evidence
+
+The public demo does not call Stripe. Maintainers can run
+`just stripe-evidence create-and-delete-test-customer` against the disposable local database and an
+ignored local test key. This creates and cleans up only its own synthetic fixture; it is never part
+of CI. Read the [sandbox contract and interruption recovery](docs/stripe-sandbox.md) first.
 
 ## Public-demo safeguards
 
