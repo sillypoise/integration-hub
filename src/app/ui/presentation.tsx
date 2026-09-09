@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { p1_run_category, type P1RunView } from "../../lib/contracts/demo_views";
 import type { DemoError } from "./demo_request";
+import { Icon } from "./ui_icon";
 
 export function PageHeader({
     title,
@@ -129,7 +130,7 @@ export function ConnectionPanel() {
             <div className="connection-flow">
                 <div>
                     <span className="provider-mark" aria-hidden="true">
-                        C
+                        <Icon name="commerce" />
                     </span>
                     <strong>Commerce</strong>
                     <small>Customer updated</small>
@@ -140,7 +141,7 @@ export function ConnectionPanel() {
                 </div>
                 <div>
                     <span className="provider-mark destination" aria-hidden="true">
-                        R
+                        <Icon name="customer" />
                     </span>
                     <strong>CRM</strong>
                     <small>Idempotent customer upsert</small>
@@ -158,27 +159,7 @@ export function RunTable({
     runs,
     filtered = false,
 }: Readonly<{ runs: ReadonlyArray<P1RunView>; filtered?: boolean }>) {
-    if (runs.length === 0)
-        return (
-            <div className="empty-state">
-                <div className="empty-mark" aria-hidden="true">
-                    ⇄
-                </div>
-                <h3>
-                    {filtered ? "No matching runs on this page" : "Your first update starts here"}
-                </h3>
-                <p>
-                    {filtered
-                        ? "Choose another status or page to see more runs."
-                        : "Send a synthetic customer update and follow it all the way to the CRM."}
-                </p>
-                {filtered ? null : (
-                    <Link href="/demo/controls" className="button primary" prefetch={false}>
-                        Create a customer update <span aria-hidden="true">→</span>
-                    </Link>
-                )}
-            </div>
-        );
+    if (runs.length === 0) return <RunTableEmpty filtered={filtered} />;
     return (
         // Keyboard users need a focusable scroll region when columns exceed the viewport.
         // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex
@@ -224,6 +205,27 @@ export function RunTable({
                 </tbody>
             </table>
         </section>
+    );
+}
+
+function RunTableEmpty({ filtered }: Readonly<{ filtered: boolean }>) {
+    return (
+        <div className="empty-state">
+            <div className="empty-mark">
+                <Icon name="runs" />
+            </div>
+            <h3>{filtered ? "No matching runs on this page" : "Your first update starts here"}</h3>
+            <p>
+                {filtered
+                    ? "Choose another status or page to see more runs."
+                    : "Send a synthetic customer update and follow it all the way to the CRM."}
+            </p>
+            {filtered ? null : (
+                <Link href="/demo/controls" className="button primary" prefetch={false}>
+                    Create a customer update <span aria-hidden="true">→</span>
+                </Link>
+            )}
+        </div>
     );
 }
 

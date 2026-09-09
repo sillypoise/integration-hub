@@ -11,20 +11,39 @@ import {
     PageHeader,
     RunTable,
 } from "./presentation";
+import { Icon } from "./ui_icon";
 import { use_demo_resource } from "./use_demo_resource";
 
 function OverviewMetrics({ data }: Readonly<{ data: z.infer<typeof p1_overview_view> }>) {
     const metrics = [
-        { label: "Total updates", value: data.p1_total, note: "In this workspace" },
-        { label: "Succeeded", value: data.p1_succeeded, note: "Destination effect recorded" },
-        { label: "In progress", value: data.p1_pending, note: "Queued or processing" },
-        { label: "Needs attention", value: data.p1_attention, note: "Run or delivery stopped" },
-    ];
+        { label: "Total updates", value: data.p1_total, note: "In this workspace", icon: "runs" },
+        {
+            label: "Succeeded",
+            value: data.p1_succeeded,
+            note: "Destination effect recorded",
+            icon: "check",
+        },
+        {
+            label: "In progress",
+            value: data.p1_pending,
+            note: "Queued or processing",
+            icon: "clock",
+        },
+        {
+            label: "Needs attention",
+            value: data.p1_attention,
+            note: "Run or delivery stopped",
+            icon: "attention",
+        },
+    ] as const;
     return (
         <div className="metrics">
             {metrics.map((metric) => (
                 <section key={metric.label} className="metric">
-                    <h2>{metric.label}</h2>
+                    <div className="metric-heading">
+                        <h2>{metric.label}</h2>
+                        <Icon name={metric.icon} />
+                    </div>
                     <strong>{metric.value}</strong>
                     <span>{metric.note}</span>
                 </section>

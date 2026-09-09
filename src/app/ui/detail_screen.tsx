@@ -3,6 +3,7 @@
 import Link from "next/link";
 import {
     p1_detail_is_active,
+    p1_run_category,
     p1_run_detail_view,
     type P1DetailView,
 } from "../../lib/contracts/demo_views";
@@ -88,7 +89,11 @@ function detail_can_retry(run: P1DetailView) {
 function RunOutcome({ run }: Readonly<{ run: P1DetailView }>) {
     const active = p1_detail_is_active(run);
     return (
-        <section className="panel outcome-panel" aria-label="Run outcome">
+        <section
+            className="panel outcome-panel"
+            aria-label="Run outcome"
+            data-category={p1_run_category(run)}
+        >
             <div className="outcome-heading">
                 <div>
                     <span className="eyebrow">COMMERCE → CRM · SIMULATED</span>

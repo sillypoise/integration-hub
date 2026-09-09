@@ -9,12 +9,14 @@ test("a persistent outage exhausts visibly, admits one restoration, then resets 
     test.setTimeout(45_000);
     await open_scenario(page, "persistent_outage");
     await expect(page.getByText(/Next attempt not before/u)).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByLabel("Run outcome")).toHaveAttribute("data-category", "pending");
     await page.screenshot({ path: info.outputPath("retry-scheduled.png"), fullPage: true });
     await expect(page.getByRole("heading", { name: "Automatic retries exhausted" })).toBeVisible({
         timeout: 22_000,
     });
     await expect(page.locator(".timeline li").filter({ hasText: /Attempt [123]/u })).toHaveCount(3);
     await expect(page.getByText("No destination effect has been recorded yet.")).toBeVisible();
+    await expect(page.getByLabel("Run outcome")).toHaveAttribute("data-category", "attention");
     await page.screenshot({ path: info.outputPath("exhausted.png"), fullPage: true });
     const checkbox = page.getByRole("checkbox", {
         name: "Restore the simulator for this run and retry.",
@@ -31,6 +33,7 @@ test("a persistent outage exhausts visibly, admits one restoration, then resets 
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
         true,
     );
+    await expect(page.getByLabel("Run outcome")).toHaveAttribute("data-category", "succeeded");
     await page.screenshot({ path: info.outputPath("restored.png"), fullPage: true });
     const run_url = page.url();
     await page.getByRole("link", { name: "Demo controls", exact: true }).click();

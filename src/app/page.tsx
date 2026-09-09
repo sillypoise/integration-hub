@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { DemoEntry } from "./ui/demo_entry";
+import { Icon } from "./ui/ui_icon";
 
 export default function Home() {
     return (
@@ -73,7 +74,7 @@ function LandingHeader() {
         <header className="landing-header">
             <Link href="/" className="brand" prefetch={false}>
                 <span className="brand-mark" aria-hidden="true">
-                    ↗
+                    <Icon name="hub" />
                 </span>
                 Integration Hub
             </Link>
@@ -94,7 +95,7 @@ function PipelineIllustration() {
             </div>
             <div className="pipeline-node">
                 <span className="provider-mark" aria-hidden="true">
-                    C
+                    <Icon name="commerce" />
                 </span>
                 <div>
                     <h2>Commerce</h2>
@@ -107,7 +108,9 @@ function PipelineIllustration() {
                 <p>Validate & persist</p>
             </div>
             <div className="pipeline-worker">
-                <span aria-hidden="true">⇄</span>
+                <span aria-hidden="true">
+                    <Icon name="runs" />
+                </span>
                 <div>
                     <strong>Durable synchronization</strong>
                     <p>PostgreSQL queue · Validated mapping</p>
@@ -119,7 +122,7 @@ function PipelineIllustration() {
             </div>
             <div className="pipeline-node">
                 <span className="provider-mark destination" aria-hidden="true">
-                    R
+                    <Icon name="customer" />
                 </span>
                 <div>
                     <h2>CRM</h2>

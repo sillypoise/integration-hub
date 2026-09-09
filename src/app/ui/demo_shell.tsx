@@ -3,58 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
+import { Icon } from "./ui_icon";
 
 export function DemoShell({ children }: Readonly<{ children: ReactNode }>) {
-    const pathname = usePathname();
     return (
         <div className="workspace-layout">
-            <aside className="sidebar">
-                <Link href="/" className="brand" prefetch={false}>
-                    <span className="brand-mark" aria-hidden="true">
-                        ↗
-                    </span>
-                    Integration Hub
-                </Link>
-                <div className="sidebar-caption">YOUR OPERATIONS</div>
-                <nav aria-label="Demo navigation">
-                    {[
-                        { href: "/demo", label: "Overview", mark: "◫" },
-                        { href: "/demo/runs", label: "Synchronization runs", mark: "⇄" },
-                        { href: "/demo/controls", label: "Demo controls", mark: "+" },
-                    ].map((item) => (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            prefetch={false}
-                            aria-current={
-                                (
-                                    item.href === "/demo"
-                                        ? pathname === item.href
-                                        : pathname.startsWith(item.href)
-                                )
-                                    ? "page"
-                                    : undefined
-                            }
-                        >
-                            <span aria-hidden="true" className="nav-mark">
-                                {item.mark}
-                            </span>
-                            {item.label}
-                        </Link>
-                    ))}
-                </nav>
-                <div className="sidebar-note">
-                    <span className="sidebar-dot" aria-hidden="true" /> Isolated demo
-                    <p>
-                        Synthetic customers.
-                        <br />
-                        No external side effects.
-                    </p>
-                </div>
-                <Link href="/" className="sidebar-back" prefetch={false}>
-                    About this project ↗
-                </Link>
-            </aside>
+            <DemoSidebar />
             <div className="workspace-body">
                 <header className="topbar">
                     <span>
@@ -71,5 +25,60 @@ export function DemoShell({ children }: Readonly<{ children: ReactNode }>) {
                 </footer>
             </div>
         </div>
+    );
+}
+
+const navigation = [
+    { href: "/demo", label: "Overview", icon: "overview" },
+    { href: "/demo/runs", label: "Synchronization runs", icon: "runs" },
+    { href: "/demo/controls", label: "Demo controls", icon: "controls" },
+] as const;
+
+function DemoSidebar() {
+    const pathname = usePathname();
+    return (
+        <aside className="sidebar">
+            <Link href="/" className="brand" prefetch={false}>
+                <span className="brand-mark">
+                    <Icon name="hub" />
+                </span>
+                Integration Hub
+            </Link>
+            <div className="sidebar-caption">WORKSPACE / DEMO</div>
+            <nav aria-label="Demo navigation">
+                {navigation.map((item) => (
+                    <Link
+                        key={item.href}
+                        href={item.href}
+                        prefetch={false}
+                        aria-current={
+                            (
+                                item.href === "/demo"
+                                    ? pathname === item.href
+                                    : pathname.startsWith(item.href)
+                            )
+                                ? "page"
+                                : undefined
+                        }
+                    >
+                        <span className="nav-mark">
+                            <Icon name={item.icon} />
+                        </span>
+                        {item.label}
+                    </Link>
+                ))}
+            </nav>
+            <div className="sidebar-note">
+                <span className="sidebar-dot" aria-hidden="true" /> Isolated demo
+                <p>
+                    Synthetic customers.
+                    <br />
+                    No external side effects.
+                </p>
+            </div>
+            <Link href="/" className="sidebar-back" prefetch={false}>
+                About this project ↗
+            </Link>
+        </aside>
     );
 }
