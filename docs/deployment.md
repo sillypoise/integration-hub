@@ -138,8 +138,13 @@ outage/destructive database drills confined to disposable local/CI databases.
 
 ## Deployment evidence
 
-Current Stage 8 deployment `405e947e-2b25-4f66-9b67-e6ce77b2d426` passed runtime launch verification
-and ten hosted desktop/mobile checks. Six migrations, retained admission budgets,
+Current UI-polish deployment `1c06b389-cedf-4435-bd39-e9e653d7e696` passed readiness and six hosted
+checks after CI `34357310674`. Runtime inventory matches all 94 scanned package versions; the
+maintainer adapter and provider credentials remain absent. No schema changes were introduced. See
+[design release evidence](design-polish.md), including the early-startup log verification gap.
+
+Previous Stage 8 deployment `405e947e-2b25-4f66-9b67-e6ce77b2d426` passed runtime launch
+verification and ten hosted desktop/mobile checks. Six migrations, retained admission budgets,
 provider-credential absence, and 94 matching OS/application package versions were verified. Its CI
 image scan had zero findings at all severities. See the
 [Stage 8 report](stage-reports/stage-08-public-hardening.md) for evidence and the failed

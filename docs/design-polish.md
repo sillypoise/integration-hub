@@ -1,7 +1,7 @@
-# Design polish: local review
+# Design polish
 
-Status: implemented and locally verified; not committed or deployed. The hosted release is
-unchanged.
+Status: deployed. Implementation `500fab4` is live in Railway deployment
+`1c06b389-cedf-4435-bd39-e9e653d7e696`.
 
 ## Direction and scope
 
@@ -48,7 +48,25 @@ framework. There are no new external asset requests or backend operations.
   dependencies, or runtime state were added in this pass.
 
 Visual preference still needs maintainer review; this is not a comprehensive accessibility audit.
-Preview with `just dev` before approving a hosted release. No real provider calls were made.
+Preview further changes with `just dev`. No real provider calls were made.
+
+## Hosted release
+
+- [CI 34357310674](https://github.com/sillypoise/integration-hub/actions/runs/34357310674) passed,
+  including 251 unit/integration tests, 38 browser checks, container smoke, and image audit. The
+  retained image report has 94 packages and zero findings at all severities.
+- Deployed through `just --no-dotenv deploy`, keeping the local provider environment file out of the
+  deployment command's environment. No schema or service-configuration changes were required.
+- Six selected hosted desktop/mobile checks passed: mapping and replay, exhausted retry followed by
+  restoration/reset, and CSP/hydration. Both health endpoints returned HTTP 200.
+- Read-only inspection confirmed PID 1 runs `node src/container.ts` as UID 10001, no global Node
+  package tools or maintainer directory, no provider credentials, and all 94 package versions
+  matching the CI report. Six migrations and both durable budgets remain present. Railway rebuilds
+  are not byte-identical artifact attestations.
+- Logging follow-up: Railway CLI returned migration completion and application startup, but not the
+  expected `Container runtime verified.` line. Command/UID/filesystem checks passed independently;
+  the missing startup log is a telemetry verification gap, not evidence the guard was bypassed. The
+  maintainer should investigate collection of this early log during the Stage 9 release review.
 
 Guide trace: `SIMPLE-ADMIT-002/003` existing styles and bounded icons; `CONTRACT-COMP-003` unchanged
 public behavior; `SAF-11` negative and viewport-boundary checks; `EPI-CLAIM-002` local versus hosted
